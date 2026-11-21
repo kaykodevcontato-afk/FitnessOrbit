@@ -19,3 +19,10 @@ O módulo Música aceita quatro origens: **YouTube, SoundCloud, Spotify e Audius
 O armazenamento usa a chave original `fitness-orbit-v1`; playlists antigas do YouTube continuam identificadas como YouTube mesmo sem o novo campo `service`.
 
 **Testes:** sintaxe JavaScript verificada com `node --check`. A reprodução real dos serviços não foi confirmada no navegador por limitações do ambiente; depende da conexão, regras da plataforma e permissões de incorporação.
+
+
+## V2.3 — Pesquisar músicas
+- Nova busca direta no catálogo público do Audius e busca interna das músicas salvas.
+- Os resultados têm Ouvir e Salvar, sem interromper o player ao salvar.
+- YouTube, SoundCloud e Spotify continuam aceitando links. Busca direta neles exige autenticação/API específica.
+- Para obter resultados do Audius é necessário conexão com a internet. Nem todas as faixas permitem incorporação.
