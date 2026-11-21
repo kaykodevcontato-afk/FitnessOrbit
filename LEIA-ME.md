@@ -1,15 +1,12 @@
-# Fitness Orbit V2.0 — Salvamento sem interromper a reprodução
+# Fitness Orbit V2.1 — Interface simplificada
 
-## Alteração
-- Ao clicar em **Salvar playlist**, o novo link é armazenado e aparece na lista sem iniciar automaticamente a reprodução.
-- A música atual (YouTube ou áudio local) continua tocando, na mesma posição e volume.
-- Para tocar a nova playlist, clique manualmente em **▶ Ouvir aqui**.
-- O funcionamento anterior das demais seções foi preservado.
+Ajuste de textos visíveis ao usuário. Foram removidas frases promocionais ou técnicas repetitivas, indicações de versão dentro da biblioteca de exercícios e termos como "protótipo funcional" no rodapé.
 
-## Instalação
-1. Exporte um backup do Fitness Orbit.
-2. Substitua `index.html` no GitHub Pages.
-3. Atualize o navegador com Ctrl+F5.
+Continuam visíveis apenas os avisos relevantes: a alimentação é um cardápio de exemplo (sem IA), limitações de GPS e reprodução do YouTube, dados armazenados localmente e necessidade de backup.
 
-## Nota
-A reprodução de YouTube incorporado depende das permissões do vídeo e do navegador. A alteração não recria o player ao salvar.
+**Funcionalidades preservadas:** treinos, biblioteca de exercícios, mapas musculares estáticos, hidratação, alimentação, GPS, evolução, temas e Fit Music (inclusive salvar playlist sem interromper a reprodução).
+
+## Publicar
+1. Faça backup pelo menu Meu perfil.
+2. Substitua o arquivo `index.html` no GitHub Pages.
+3. Atualize com Ctrl+F5.
