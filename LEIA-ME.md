@@ -1,28 +1,22 @@
-# Fitness Orbit V2.2 — Fit Music multiplataforma
+# Fitness Orbit V2.4 — Correções do Fit Music
 
-O módulo Música aceita quatro origens: **YouTube, SoundCloud, Spotify e Audius**, além dos arquivos de áudio locais. A seleção da plataforma fica acima do campo para colar links.
+## Ajustes
+- Spotify: integrado à API oficial Spotify iFrame para conectar o botão principal Play/Pausa e acompanhar a posição quando o serviço fornece os eventos. Se não carregar, permanece o player Spotify incorporado.
+- SoundCloud: a Widget API agora é carregada antes da criação do iframe, para reduzir erros de inicialização. Play/Pausa, volume e progresso usam os eventos do SoundCloud.
+- YouTube: mantida a API IFrame com player interno e identificação de origem HTTPS.
+- Audius: mantido o player oficial incorporado. A reprodução é acionada dentro dele; seus comandos não são expostos à página como no SoundCloud.
+- MP3: segue com reprodução local.
+- Salvar uma faixa ou playlist não recria o player em execução. Adicionar MP3 também não inicia automaticamente uma música.
+- Mantida a chave `fitness-orbit-v1` do localStorage para preservar os registros existentes.
 
-## Reprodução no próprio site
-- **YouTube:** player incorporado com IFrame Player API; navegador pode exigir ação do usuário e alguns vídeos não permitem incorporação.
-- **SoundCloud:** widget oficial com controles de reproduzir/pausar, volume e posição da faixa. Use links públicos de faixas ou playlists do SoundCloud.
-- **Spotify:** player incorporado oficial. Use links `open.spotify.com/track/...`, `playlist/...`, `album/...`, `episode/...` ou `show/...`. A reprodução completa depende da plataforma e da conta; controles no próprio widget.
-- **Audius:** player incorporado com links oficiais `/embed/track/...` ou `/embed/playlist/...`. Para links normais, o app tenta obter a incorporação via oEmbed; se não conseguir, copie o link de incorporação no Audius. Controles dentro do widget.
-- **Áudio local:** arquivos temporários do dispositivo, selecionados a cada sessão.
+## Atualizar
+1. Exporte o backup no site atual.
+2. Substitua `index.html` no repositório GitHub Pages.
+3. Abra o site por HTTPS e recarregue com Ctrl+F5.
+4. Adicione links válidos de cada plataforma, abra uma faixa e teste Play/Pausa.
 
-**Salvar uma playlist não interrompe o player ativo.** A reprodução muda somente ao clicar em "Ouvir aqui" em outra faixa.
-
-## Atualização no GitHub Pages
-1. Exporte um backup no Meu perfil.
-2. Substitua o arquivo `index.html` por este.
-3. Acesse o site publicado via HTTPS e recarregue com Ctrl+F5.
-
-O armazenamento usa a chave original `fitness-orbit-v1`; playlists antigas do YouTube continuam identificadas como YouTube mesmo sem o novo campo `service`.
-
-**Testes:** sintaxe JavaScript verificada com `node --check`. A reprodução real dos serviços não foi confirmada no navegador por limitações do ambiente; depende da conexão, regras da plataforma e permissões de incorporação.
-
-
-## V2.3 — Pesquisar músicas
-- Nova busca direta no catálogo público do Audius e busca interna das músicas salvas.
-- Os resultados têm Ouvir e Salvar, sem interromper o player ao salvar.
-- YouTube, SoundCloud e Spotify continuam aceitando links. Busca direta neles exige autenticação/API específica.
-- Para obter resultados do Audius é necessário conexão com a internet. Nem todas as faixas permitem incorporação.
+## Limitações
+- Navegadores podem bloquear reprodução automática de conteúdo com áudio.
+- Algumas faixas/vídeos não permitem incorporação ou exigem login/assinatura. O Spotify pode oferecer apenas prévias em certos contextos.
+- Audius exige usar o Play do próprio iframe. Não há um controle universal que substitua as regras de cada serviço.
+- O ambiente de validação bloqueou navegação no navegador automatizado, então a reprodução real dos serviços deve ser conferida no endereço HTTPS publicado.

@@ -94,7 +94,20 @@ $('measureDate').value=today();$('measureForm').onsubmit=e=>{e.preventDefault();
 function ytEmbed(raw){try{let u=new URL(raw);if(!['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtu.be'].includes(u.hostname))return null;let playlist=u.searchParams.get('list');if(playlist&&/^[\w-]{10,100}$/.test(playlist))return 'https://www.youtube-nocookie.com/embed/videoseries?list='+encodeURIComponent(playlist);let id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||(u.pathname.startsWith('/shorts/')||u.pathname.startsWith('/embed/')?u.pathname.split('/')[2]:null);return id&&/^[\w-]{11}$/.test(id)?'https://www.youtube-nocookie.com/embed/'+id:null}catch{return null}}// Fit Music V1.8: arquivos escolhidos pelo usuário são temporários; links do YouTube são persistentes.
 const musicCategories={pesado:'Treino pesado',cardio:'Corrida e cardio',foco:'Foco e concentração',personalizada:'Playlist personalizada'};
 let musicCategory='pesado',localTracks=[],activeMusicId=null,activeMusicType=null,musicService='youtube';
-let soundCloudWidget=null,soundCloudTick=null,soundCloudRequest=0,soundCloudDuration=0,spotifyIframe=null;
+let soundCloudWidget=null,soundCloudTick=null,soundCloudRequest=0,soundCloudDuration=0;
+let soundCloudApiPromise=null,spotifyApiPromise=null,spotifyController=null,spotifyRequest=0,spotifyDuration=0;
+function loadSpotifyApi(){
+ if(spotifyApiPromise)return spotifyApiPromise;
+ spotifyApiPromise=new Promise((resolve,reject)=>{
+  let done=false;
+  const timer=setTimeout(()=>fail(new Error('Tempo de carregamento excedido')),12000);
+  function fail(e){if(done)return;done=true;clearTimeout(timer);spotifyApiPromise=null;reject(e)}
+  const prior=window.onSpotifyIframeApiReady;
+  window.onSpotifyIframeApiReady=function(api){if(typeof prior==='function')try{prior(api)}catch{};if(done)return;done=true;clearTimeout(timer);resolve(api)};
+  const script=document.createElement('script');script.src='https://open.spotify.com/embed/iframe-api/v1';script.async=true;script.onerror=()=>fail(new Error('Não foi possível carregar a API do Spotify'));document.head.appendChild(script);
+ });
+ return spotifyApiPromise;
+}
 const musicServices={youtube:'YouTube',soundcloud:'SoundCloud',spotify:'Spotify',audius:'Audius'};
 function detectService(url){try{const h=new URL(url).hostname.toLowerCase().replace(/^www\./,'');if(['youtube.com','music.youtube.com','m.youtube.com','youtu.be','youtube-nocookie.com'].includes(h))return 'youtube';if(h==='soundcloud.com'||h==='on.soundcloud.com'||h==='m.soundcloud.com')return 'soundcloud';if(h==='open.spotify.com')return 'spotify';if(h==='audius.co'||h==='www.audius.co')return 'audius'}catch{}return null}
 function validatedMusicUrl(url,service){if(detectService(url)!==service)return false;try{const u=new URL(url);if(u.protocol!=='https:')return false;switch(service){case 'youtube':return !!youtubeParams(url);case 'soundcloud':return u.pathname.length>2;case 'spotify':return /^\/(intl-[a-z]{2}\/)?(track|playlist|album|episode|show)\/[a-zA-Z0-9]+\/?$/.test(u.pathname);case 'audius':return u.pathname.length>2;default:return false}}catch{return false}}
@@ -200,44 +213,91 @@ async function playYoutubeTrack(track){
 function placeServiceFrame(src,title,height=220){
  const frame=document.createElement('iframe');frame.title=title;frame.src=src;frame.loading='eager';frame.referrerPolicy='strict-origin-when-cross-origin';frame.allow='autoplay; encrypted-media; fullscreen; picture-in-picture';frame.allowFullscreen=true;frame.style.width='100%';frame.style.height=height+'px';frame.style.border='0';frame.style.borderRadius='12px';$('playerBox').replaceChildren(frame);return frame;
 }
-function loadSoundCloudScript(){if(window.SC?.Widget)return Promise.resolve();return new Promise((resolve,reject)=>{let script=document.createElement('script');script.src='https://w.soundcloud.com/player/api.js';script.onload=()=>window.SC?.Widget?resolve():reject(new Error('SoundCloud indisponível'));script.onerror=reject;document.head.appendChild(script)})}
+function loadSoundCloudScript(){
+ if(window.SC?.Widget)return Promise.resolve();
+ if(soundCloudApiPromise)return soundCloudApiPromise;
+ soundCloudApiPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://w.soundcloud.com/player/api.js';script.onload=()=>window.SC?.Widget?resolve():reject(new Error('SoundCloud indisponível'));script.onerror=()=>reject(new Error('Não foi possível carregar SoundCloud'));document.head.appendChild(script)}).catch(e=>{soundCloudApiPromise=null;throw e});
+ return soundCloudApiPromise;
+}
 async function playEmbeddedMusic(t){
- const req=++soundCloudRequest;$('musicInlineState').textContent='Carregando '+musicServices[t.kind];$('musicSeek').value=0;$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicToggle').textContent='▶';
+ const req=++soundCloudRequest;
+ $('musicInlineState').textContent='Carregando '+musicServices[t.kind];
+ $('musicSeek').value=0;$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicToggle').textContent='▶';
  if(t.kind==='soundcloud'){
   const src='https://w.soundcloud.com/player/?url='+encodeURIComponent(t.url)+'&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=false';
-  const iframe=placeServiceFrame(src,'SoundCloud — Fit Music',190);
-  try{await loadSoundCloudScript();if(req!==soundCloudRequest||activeMusicId!==t.id)return;
+  // Carrega a API antes do widget para não perder o evento READY.
+  try{
+   await loadSoundCloudScript();
+   if(req!==soundCloudRequest||activeMusicId!==t.id)return;
+   const iframe=placeServiceFrame(src,'SoundCloud — Fit Music',190);
    const w=window.SC.Widget(iframe);soundCloudWidget=w;
-   w.bind(window.SC.Widget.Events.READY,()=>{if(req!==soundCloudRequest)return;w.setVolume(Number($('musicVolume').value));w.getDuration(d=>{soundCloudDuration=d||0;$('musicTotalTime').textContent=musicTime(soundCloudDuration/1000)});musicStatus('SoundCloud pronto. Pressione ▶ para ouvir.');$('musicInlineState').textContent='SoundCloud pronto'});
-   w.bind(window.SC.Widget.Events.PLAY,()=>{if(req===soundCloudRequest){$('musicToggle').textContent='❚❚';$('musicInlineState').textContent='Reproduzindo'}});
+   w.bind(window.SC.Widget.Events.READY,()=>{
+    if(req!==soundCloudRequest||activeMusicId!==t.id)return;
+    w.setVolume(Number($('musicVolume').value));
+    w.getDuration(d=>{if(req===soundCloudRequest){soundCloudDuration=d||0;$('musicTotalTime').textContent=musicTime(soundCloudDuration/1000)}});
+    musicStatus('SoundCloud pronto. Pressione ▶ para ouvir.');$('musicInlineState').textContent='SoundCloud pronto';
+   });
+   w.bind(window.SC.Widget.Events.PLAY,()=>{if(req===soundCloudRequest){$('musicToggle').textContent='❚❚';$('musicInlineState').textContent='Reproduzindo';musicStatus('Reproduzindo SoundCloud.')}});
    w.bind(window.SC.Widget.Events.PAUSE,()=>{if(req===soundCloudRequest){$('musicToggle').textContent='▶';$('musicInlineState').textContent='Pausado'}});
    w.bind(window.SC.Widget.Events.FINISH,()=>{if(req===soundCloudRequest){$('musicToggle').textContent='▶';$('musicInlineState').textContent='Fim da faixa'}});
-   soundCloudTick=setInterval(()=>{if(req!==soundCloudRequest||!soundCloudWidget)return;w.getPosition(pos=>{if(req!==soundCloudRequest)return;$('musicCurrentTime').textContent=musicTime(pos/1000);$('musicSeek').value=soundCloudDuration?Math.round(pos/soundCloudDuration*100):0})},800);
-  }catch{if(req===soundCloudRequest)musicStatus('Não foi possível carregar o controle do SoundCloud. Use o player acima.')}
+   soundCloudTick=setInterval(()=>{
+    if(req!==soundCloudRequest||!soundCloudWidget)return;
+    w.getPosition(pos=>{if(req!==soundCloudRequest)return;$('musicCurrentTime').textContent=musicTime(pos/1000);$('musicSeek').value=soundCloudDuration?Math.round(pos/soundCloudDuration*100):0});
+   },800);
+  }catch{
+   if(req!==soundCloudRequest||activeMusicId!==t.id)return;
+   placeServiceFrame(src,'SoundCloud — Fit Music',190);
+   $('musicInlineState').textContent='SoundCloud incorporado';musicStatus('Use o botão ▶ dentro do SoundCloud.');
+  }
  }else if(t.kind==='spotify'){
-  const u=new URL(t.url),segments=u.pathname.split('/').filter(Boolean).filter(v=>!/^intl-/.test(v));const type=segments[0],id=segments[1];
-  if(!['track','playlist','album','episode','show'].includes(type)||!/^\w+$/.test(id)){musicStatus('Link do Spotify inválido.');return}
-  spotifyIframe=placeServiceFrame('https://open.spotify.com/embed/'+type+'/'+id+'?utm_source=generator','Spotify — Fit Music',352);
-  $('musicInlineState').textContent='Spotify incorporado';musicStatus('Reproduza pelo controle do Spotify. A disponibilidade depende da sua conta e da faixa.');
+  const u=new URL(t.url),segments=u.pathname.split('/').filter(Boolean).filter(v=>!/^intl-/.test(v));
+  const type=segments[0],id=segments[1];
+  if(!['track','playlist','album','episode','show'].includes(type)||!/^[a-zA-Z0-9]+$/.test(id)){musicStatus('Link do Spotify inválido.');return}
+  const spotifyUri='spotify:'+type+':'+id;
+  const embed='https://open.spotify.com/embed/'+type+'/'+id;
+  const spotifyReq=++spotifyRequest;
+  try{
+   const api=await loadSpotifyApi();
+   if(spotifyReq!==spotifyRequest||activeMusicId!==t.id||activeMusicType!=='spotify')return;
+   const mount=document.createElement('div');mount.style.width='100%';mount.style.minHeight='352px';$('playerBox').replaceChildren(mount);
+   api.createController(mount,{uri:spotifyUri,width:'100%',height:352},controller=>{
+    if(spotifyReq!==spotifyRequest||activeMusicId!==t.id){try{controller.destroy()}catch{};return}
+    spotifyController=controller;
+    controller.addListener('ready',()=>{if(spotifyReq!==spotifyRequest)return;$('musicInlineState').textContent='Spotify pronto';musicStatus('Pressione ▶ ou use os controles do Spotify.');});
+    controller.addListener('playback_update',e=>{
+     if(spotifyReq!==spotifyRequest||activeMusicType!=='spotify')return;
+     const d=e.data||{};spotifyDuration=Number(d.duration)||0;
+     $('musicToggle').textContent=d.isPaused?'▶':'❚❚';
+     $('musicInlineState').textContent=d.isPaused?'Spotify pausado':'Spotify reproduzindo';
+     $('musicCurrentTime').textContent=musicTime((Number(d.position)||0)/1000);
+     $('musicTotalTime').textContent=musicTime(spotifyDuration/1000);
+     $('musicSeek').value=spotifyDuration?Math.round((Number(d.position)||0)/spotifyDuration*100):0;
+    });
+    $('musicInlineState').textContent='Spotify incorporado';musicStatus('Use ▶ para reproduzir. Algumas faixas exigem interação no player do Spotify.');
+   });
+  }catch{
+   if(spotifyReq!==spotifyRequest||activeMusicId!==t.id)return;
+   placeServiceFrame(embed,'Spotify — Fit Music',352);
+   $('musicInlineState').textContent='Spotify incorporado';musicStatus('Use o botão ▶ no player do Spotify.');
+  }
  }else if(t.kind==='audius'){
   const u=new URL(t.url);let embedUrl=null;
   if(/^\/embed\/(track|playlist)\/[\w-]+/.test(u.pathname))embedUrl='https://audius.co'+u.pathname;
   else{
-   try{const response=await fetch('https://audius.co/oembed?url='+encodeURIComponent(t.url)+'&format=json');if(!response.ok)throw Error('Sem resposta');const d=await response.json();const html=document.createElement('template');html.innerHTML=d.html||'';const provided=html.content.querySelector('iframe')?.getAttribute('src');if(provided){const u2=new URL(provided);if(['audius.co','www.audius.co'].includes(u2.hostname)&&u2.pathname.startsWith('/embed/'))embedUrl=u2.href}}
-   catch{};
+   try{const response=await fetch('https://audius.co/oembed?url='+encodeURIComponent(t.url)+'&format=json');if(!response.ok)throw Error('Sem resposta');const d=await response.json();const html=document.createElement('template');html.innerHTML=d.html||'';const provided=html.content.querySelector('iframe')?.getAttribute('src');if(provided){const u2=new URL(provided);if(['audius.co','www.audius.co'].includes(u2.hostname)&&u2.pathname.startsWith('/embed/'))embedUrl=u2.href}}catch{}
   }
   if(req!==soundCloudRequest||activeMusicId!==t.id)return;
-  if(!embedUrl){musicStatus('Para esta faixa, copie o link de incorporação (Embed) no Audius e cadastre novamente.');$('musicInlineState').textContent='Link de incorporação necessário';return}
-  placeServiceFrame(embedUrl,'Audius — Fit Music',300);$('musicInlineState').textContent='Audius incorporado';musicStatus('Reproduza pelo controle do Audius.');
+  if(!embedUrl){musicStatus('Este link não ofereceu um player incorporado. Use o link Embed da faixa no Audius.');$('musicInlineState').textContent='Incorporação indisponível';return}
+  placeServiceFrame(embedUrl,'Audius — Fit Music',300);
+  $('musicInlineState').textContent='Audius incorporado';musicStatus('Para ouvir no Audius, pressione ▶ dentro do player acima.');
  }
 }
-
 const musicAudio=$('musicAudio');musicAudio.volume=.8;
 function musicQueue(){return [...data.music.map(t=>({...t,kind:t.service||'youtube',category:t.category||'personalizada'})),...localTracks].filter(t=>t.category===musicCategory)}
 function musicAll(){return [...data.music.map(t=>({...t,kind:t.service||'youtube',category:t.category||'personalizada'})),...localTracks]}
 function musicStatus(message){$('musicStatus').textContent=message}
 function musicTime(secs){if(!Number.isFinite(secs))return '0:00';const t=Math.max(0,Math.floor(secs));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function stopCurrentMusic(){++youtubeRequest;++soundCloudRequest;clearInterval(soundCloudTick);soundCloudTick=null;soundCloudWidget=null;spotifyIframe=null;stopYoutube();musicAudio.pause();musicAudio.removeAttribute('src');musicAudio.load();activeMusicId=null;activeMusicType=null;$('musicToggle').textContent='▶';$('musicNowTitle').textContent='Nenhuma música selecionada';$('musicNowSubtitle').textContent=musicCategories[musicCategory];$('musicPlayerMode').textContent='Áudio';$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicSeek').value=0}
+function stopCurrentMusic(){++youtubeRequest;++soundCloudRequest;++spotifyRequest;clearInterval(soundCloudTick);soundCloudTick=null;soundCloudWidget=null;spotifyDuration=0;if(spotifyController){try{spotifyController.destroy()}catch{}spotifyController=null}stopYoutube();musicAudio.pause();musicAudio.removeAttribute('src');musicAudio.load();activeMusicId=null;activeMusicType=null;$('musicToggle').textContent='▶';$('musicNowTitle').textContent='Nenhuma música selecionada';$('musicNowSubtitle').textContent=musicCategories[musicCategory];$('musicPlayerMode').textContent='Áudio';$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicSeek').value=0}
 function selectMusicCategory(category){if(!musicCategories[category])return;musicCategory=category;$('musicCategory').value=category;document.querySelectorAll('[data-music-category]').forEach(b=>{let on=b.dataset.musicCategory===category;b.classList.toggle('selected',on);b.querySelector('.music-indicator').textContent=on?'◉':'▷'});renderMusic();if(!musicQueue().length)musicStatus('Adicione uma música ou playlist para '+musicCategories[category].toLowerCase()+'.');else musicStatus(musicQueue().length+' item(ns) disponíveis nesta trilha.')}
 function playMusicItem(id){
   const t=musicAll().find(item=>item.id===id);
@@ -295,10 +355,19 @@ $('musicDiscovery').addEventListener('click',e=>{
 });
 $('musicPresets').addEventListener('click',e=>{let b=e.target.closest('[data-music-category]');if(b)selectMusicCategory(b.dataset.musicCategory)});
 $('musicCategory').addEventListener('change',e=>selectMusicCategory(e.target.value));
-$('musicFiles').addEventListener('change',e=>{let files=Array.from(e.target.files||[]),added=0;for(let f of files){if(!(f.type.startsWith('audio/')||/\.(mp3|m4a|ogg|wav|flac)$/i.test(f.name))){continue}localTracks.push({id:uid(),name:f.name.replace(/\.[^.]+$/,''),category:musicCategory,kind:'local',url:URL.createObjectURL(f)});added++}e.target.value='';renderMusic();musicStatus(added?added+' arquivo(s) adicionado(s) para esta sessão.':'Nenhum áudio compatível selecionado.');if(added&&!activeMusicId)playMusicItem(localTracks[localTracks.length-added].id)});
+$('musicFiles').addEventListener('change',e=>{let files=Array.from(e.target.files||[]),added=0;for(let f of files){if(!(f.type.startsWith('audio/')||/\.(mp3|m4a|ogg|wav|flac)$/i.test(f.name))){continue}localTracks.push({id:uid(),name:f.name.replace(/\.[^.]+$/,''),category:musicCategory,kind:'local',url:URL.createObjectURL(f)});added++}e.target.value='';renderMusic();musicStatus(added?added+' arquivo(s) adicionado(s) para esta sessão.':'Nenhum áudio compatível selecionado.');});
 $('musicForm').onsubmit=e=>{e.preventDefault();const url=$('musicUrl').value.trim();if(!validatedMusicUrl(url,musicService)){toast('Informe um link válido de '+musicServices[musicService]+'.');return}let track={id:uid(),name:$('musicName').value.trim(),url,category:musicCategory,service:musicService};data.music.push(track);save();$('musicForm').reset();renderMusic();toast('Playlist salva! A música atual continua tocando.')} ;
 $('musicList').addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.play){playMusicItem(b.dataset.play);return}if(b.dataset.delmusic){let id=b.dataset.delmusic;if(!confirm('Excluir esta música da lista?'))return;if(activeMusicId===id)stopCurrentMusic();let local=localTracks.find(x=>x.id===id);if(local){URL.revokeObjectURL(local.url);localTracks=localTracks.filter(x=>x.id!==id)}else{data.music=data.music.filter(x=>x.id!==id);save()}renderMusic();toast('Música removida.')}});
-$('musicToggle').addEventListener('click',()=>{if(activeMusicType==='soundcloud'){if(soundCloudWidget){soundCloudWidget.toggle()}else musicStatus('Carregando SoundCloud...');return}if(activeMusicType==='spotify'||activeMusicType==='audius'){musicStatus('Use o botão de reprodução dentro do player '+musicServices[activeMusicType]+'.');return}if(activeMusicType==='youtube'){
+$('musicToggle').addEventListener('click',()=>{if(activeMusicType==='soundcloud'){if(soundCloudWidget){soundCloudWidget.toggle()}else musicStatus('Carregando SoundCloud...');return}if(activeMusicType==='spotify'){
+ if(spotifyController){try{spotifyController.togglePlay()}catch{musicStatus('Use o controle de reprodução do Spotify no player acima.')}}
+ else musicStatus('Use o botão ▶ dentro do player do Spotify.');
+ return;
+}
+if(activeMusicType==='audius'){
+ musicStatus('Para ouvir Audius, pressione ▶ dentro do player incorporado acima.');
+ $('playerBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+ return;
+}if(activeMusicType==='youtube'){
   if(!youtubeReady||!youtubePlayer){musicStatus('O player está carregando nesta página. Caso o navegador bloqueie autoplay, toque ▶ no vídeo quando aparecer.');return}
   const state=youtubePlayer.getPlayerState();
   if(state===YT.PlayerState.PLAYING)youtubePlayer.pauseVideo();else youtubePlayer.playVideo();
@@ -306,7 +375,7 @@ $('musicToggle').addEventListener('click',()=>{if(activeMusicType==='soundcloud'
 }if(!activeMusicId){let first=musicQueue()[0];if(first)playMusicItem(first.id);else musicStatus('Adicione uma música antes de reproduzir.');return}if(musicAudio.paused){musicAudio.play().then(()=>$('musicToggle').textContent='❚❚').catch(()=>musicStatus('Não foi possível reproduzir este arquivo.'))}else{musicAudio.pause();$('musicToggle').textContent='▶'}});
 $('musicPrev').addEventListener('click',()=>nextMusic(-1));$('musicNext').addEventListener('click',()=>nextMusic(1));
 $('musicVolume').addEventListener('input',e=>{const vol=Number(e.target.value);musicAudio.volume=vol/100;if(youtubeReady&&youtubePlayer)youtubePlayer.setVolume(vol);if(activeMusicType==='soundcloud'&&soundCloudWidget)soundCloudWidget.setVolume(vol)});
-$('musicSeek').addEventListener('input',e=>{if(activeMusicType==='local'&&Number.isFinite(musicAudio.duration))musicAudio.currentTime=Number(e.target.value)/100*musicAudio.duration;else if(activeMusicType==='soundcloud'&&soundCloudWidget&&soundCloudDuration>0){soundCloudWidget.seekTo(Number(e.target.value)/100*soundCloudDuration)}else if(activeMusicType==='youtube'&&youtubeReady&&youtubePlayer){const duration=youtubePlayer.getDuration();if(duration>0)youtubePlayer.seekTo(Number(e.target.value)/100*duration,true)}});
+$('musicSeek').addEventListener('input',e=>{if(activeMusicType==='local'&&Number.isFinite(musicAudio.duration))musicAudio.currentTime=Number(e.target.value)/100*musicAudio.duration;else if(activeMusicType==='soundcloud'&&soundCloudWidget&&soundCloudDuration>0){soundCloudWidget.seekTo(Number(e.target.value)/100*soundCloudDuration)}else if(activeMusicType==='spotify'&&spotifyController&&spotifyDuration>0){spotifyController.seek(Math.floor(Number(e.target.value)/100*spotifyDuration/1000))}else if(activeMusicType==='youtube'&&youtubeReady&&youtubePlayer){const duration=youtubePlayer.getDuration();if(duration>0)youtubePlayer.seekTo(Number(e.target.value)/100*duration,true)}});
 musicAudio.addEventListener('timeupdate',()=>{$('musicCurrentTime').textContent=musicTime(musicAudio.currentTime);$('musicTotalTime').textContent=musicTime(musicAudio.duration);$('musicSeek').value=Number.isFinite(musicAudio.duration)&&musicAudio.duration>0?String(Math.round(musicAudio.currentTime/musicAudio.duration*100)):'0'});
 musicAudio.addEventListener('loadedmetadata',()=>$('musicTotalTime').textContent=musicTime(musicAudio.duration));
 musicAudio.addEventListener('pause',()=>{if(activeMusicType==='local')$('musicToggle').textContent='▶'});
