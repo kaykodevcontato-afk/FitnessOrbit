@@ -1,12 +1,21 @@
-# Fitness Orbit V2.1 — Interface simplificada
+# Fitness Orbit V2.2 — Fit Music multiplataforma
 
-Ajuste de textos visíveis ao usuário. Foram removidas frases promocionais ou técnicas repetitivas, indicações de versão dentro da biblioteca de exercícios e termos como "protótipo funcional" no rodapé.
+O módulo Música aceita quatro origens: **YouTube, SoundCloud, Spotify e Audius**, além dos arquivos de áudio locais. A seleção da plataforma fica acima do campo para colar links.
 
-Continuam visíveis apenas os avisos relevantes: a alimentação é um cardápio de exemplo (sem IA), limitações de GPS e reprodução do YouTube, dados armazenados localmente e necessidade de backup.
+## Reprodução no próprio site
+- **YouTube:** player incorporado com IFrame Player API; navegador pode exigir ação do usuário e alguns vídeos não permitem incorporação.
+- **SoundCloud:** widget oficial com controles de reproduzir/pausar, volume e posição da faixa. Use links públicos de faixas ou playlists do SoundCloud.
+- **Spotify:** player incorporado oficial. Use links `open.spotify.com/track/...`, `playlist/...`, `album/...`, `episode/...` ou `show/...`. A reprodução completa depende da plataforma e da conta; controles no próprio widget.
+- **Audius:** player incorporado com links oficiais `/embed/track/...` ou `/embed/playlist/...`. Para links normais, o app tenta obter a incorporação via oEmbed; se não conseguir, copie o link de incorporação no Audius. Controles dentro do widget.
+- **Áudio local:** arquivos temporários do dispositivo, selecionados a cada sessão.
 
-**Funcionalidades preservadas:** treinos, biblioteca de exercícios, mapas musculares estáticos, hidratação, alimentação, GPS, evolução, temas e Fit Music (inclusive salvar playlist sem interromper a reprodução).
+**Salvar uma playlist não interrompe o player ativo.** A reprodução muda somente ao clicar em "Ouvir aqui" em outra faixa.
 
-## Publicar
-1. Faça backup pelo menu Meu perfil.
-2. Substitua o arquivo `index.html` no GitHub Pages.
-3. Atualize com Ctrl+F5.
+## Atualização no GitHub Pages
+1. Exporte um backup no Meu perfil.
+2. Substitua o arquivo `index.html` por este.
+3. Acesse o site publicado via HTTPS e recarregue com Ctrl+F5.
+
+O armazenamento usa a chave original `fitness-orbit-v1`; playlists antigas do YouTube continuam identificadas como YouTube mesmo sem o novo campo `service`.
+
+**Testes:** sintaxe JavaScript verificada com `node --check`. A reprodução real dos serviços não foi confirmada no navegador por limitações do ambiente; depende da conexão, regras da plataforma e permissões de incorporação.
