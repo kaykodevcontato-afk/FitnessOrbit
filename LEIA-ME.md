@@ -1,22 +1,15 @@
-# Fitness Orbit V1.9 — Correção do erro 153 no Fit Music
+# Fitness Orbit V2.0 — Salvamento sem interromper a reprodução
 
-## Correções
-- Inclusão de `<meta name="referrer" content="strict-origin-when-cross-origin">` no HTML.
-- Player YouTube criado previamente como iframe com `referrerpolicy="strict-origin-when-cross-origin"` para permitir o envio da origem na primeira solicitação.
-- URL incorporada com `enablejsapi=1`, `origin` do site, `playsinline=1` e controles do YouTube.
-- Melhor mensagem de erro 153 e aviso ao abrir o arquivo local `file://`.
-- Player permanece dentro da tela Fit Music, sem abertura em outra aba.
-- Treinos, histórico, dados salvos, músicas locais e playlists foram mantidos.
+## Alteração
+- Ao clicar em **Salvar playlist**, o novo link é armazenado e aparece na lista sem iniciar automaticamente a reprodução.
+- A música atual (YouTube ou áudio local) continua tocando, na mesma posição e volume.
+- Para tocar a nova playlist, clique manualmente em **▶ Ouvir aqui**.
+- O funcionamento anterior das demais seções foi preservado.
 
 ## Instalação
-1. Faça backup dos dados pelo Fitness Orbit antes de substituir a versão.
-2. Substitua o `index.html` no seu repositório GitHub Pages.
-3. Abra o endereço `https://...github.io/...` e recarregue com `Ctrl + F5`.
-4. No Fit Music, escolha uma playlist, clique em **▶ Ouvir aqui** e pressione play no vídeo incorporado se necessário.
+1. Exporte um backup do Fitness Orbit.
+2. Substitua `index.html` no GitHub Pages.
+3. Atualize o navegador com Ctrl+F5.
 
-## Limitações
-- O erro 153 ocorre quando o YouTube não recebe o cabeçalho HTTP Referer ou identificação equivalente de cliente. A alteração melhora a identificação, mas não garante reprodução em todos os navegadores, bloqueadores ou sistemas que removem esse cabeçalho.
-- Alguns vídeos bloqueiam incorporação e autoplay.
-- Abrir o HTML com duplo clique, usando `file://`, não fornece uma origem HTTP/HTTPS adequada.
-
-Verificações realizadas: `node --check` na sintaxe JavaScript. A reprodução real do YouTube depende de teste na página publicada.
+## Nota
+A reprodução de YouTube incorporado depende das permissões do vídeo e do navegador. A alteração não recria o player ao salvar.
