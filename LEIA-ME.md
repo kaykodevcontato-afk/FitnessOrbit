@@ -1,22 +1,19 @@
-# Fitness Orbit V2.4 — Correções do Fit Music
+# Fitness Orbit V2.6 — alinhamento e pesquisa musical
 
-## Ajustes
-- Spotify: integrado à API oficial Spotify iFrame para conectar o botão principal Play/Pausa e acompanhar a posição quando o serviço fornece os eventos. Se não carregar, permanece o player Spotify incorporado.
-- SoundCloud: a Widget API agora é carregada antes da criação do iframe, para reduzir erros de inicialização. Play/Pausa, volume e progresso usam os eventos do SoundCloud.
-- YouTube: mantida a API IFrame com player interno e identificação de origem HTTPS.
-- Audius: mantido o player oficial incorporado. A reprodução é acionada dentro dele; seus comandos não são expostos à página como no SoundCloud.
-- MP3: segue com reprodução local.
-- Salvar uma faixa ou playlist não recria o player em execução. Adicionar MP3 também não inicia automaticamente uma música.
-- Mantida a chave `fitness-orbit-v1` do localStorage para preservar os registros existentes.
+## Mudanças
+- Correções de responsividade em cards, formulários, grades, Fit Music, listas e controles para desktop e celular.
+- Pesquisa por Audius, YouTube, SoundCloud, Spotify, Todas e Minha biblioteca.
+- Audius: pesquisa pública (disponibilidade depende do serviço).
+- YouTube: requer chave YouTube Data API v3 com restrição de origem HTTP (referer) e API ativada.
+- Spotify: requer token OAuth de acesso válido. Para uso público consistente, implementar autorização OAuth PKCE ou backend de credenciais.
+- SoundCloud: requer token OAuth válido, sujeito às permissões da API e políticas CORS.
+- Credenciais não ficam persistidas e não são incluídas no backup. Não inserir client secret no frontend.
+- Resultados com Ouvir/Salvar; salvar não interrompe a faixa atual. Reprodução segue limites de incorporação de cada serviço.
 
-## Atualizar
-1. Exporte o backup no site atual.
-2. Substitua `index.html` no repositório GitHub Pages.
-3. Abra o site por HTTPS e recarregue com Ctrl+F5.
-4. Adicione links válidos de cada plataforma, abra uma faixa e teste Play/Pausa.
+## Publicar
+1. Faça backup dos dados no perfil.
+2. Atualize `index.html` no GitHub Pages.
+3. Recarregue com Ctrl+F5 e abra Fit Music.
+4. Para YouTube, Spotify e SoundCloud, abra Configurar pesquisa nas plataformas e informe a credencial apropriada.
 
-## Limitações
-- Navegadores podem bloquear reprodução automática de conteúdo com áudio.
-- Algumas faixas/vídeos não permitem incorporação ou exigem login/assinatura. O Spotify pode oferecer apenas prévias em certos contextos.
-- Audius exige usar o Play do próprio iframe. Não há um controle universal que substitua as regras de cada serviço.
-- O ambiente de validação bloqueou navegação no navegador automatizado, então a reprodução real dos serviços deve ser conferida no endereço HTTPS publicado.
+Observação: verificações de sintaxe e layout local não comprovam funcionamento de APIs externas; teste no domínio publicado.

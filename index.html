@@ -29,6 +29,13 @@
 .music-search-result .search-result-info{min-width:0;flex:1}.music-search-result b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.music-search-result small{display:block;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .music-search-result .search-result-actions{display:flex;gap:5px;flex-wrap:wrap}.music-search-result .btn{font-size:12px;padding:8px}
 @media(max-width:480px){.music-search-result{align-items:flex-start;flex-wrap:wrap}.music-search-result .search-result-actions{width:100%}}
+
+/* V2.6 — alinhamento responsivo de todas as telas */
+html{scroll-behavior:smooth}body{overflow-x:hidden}.shell,.main,.sections,.sections>section,.card,.fitmusic-grid>*,.two>*,.grid>*{min-width:0}h1,h2,h3,p,.card,.item{overflow-wrap:anywhere}.top>*{min-width:0}.actions button,.row button{max-width:100%}.formgrid>*,.field,.formgrid input,.formgrid select,.formgrid textarea{min-width:0}.card{max-width:100%}.fitmusic-grid{grid-template-columns:minmax(0,1.07fr) minmax(0,.93fr);align-items:start}.fitmusic-panel,.fitmusic-library{min-width:0}.music-platforms{grid-template-columns:repeat(4,minmax(0,1fr))}.music-platform{overflow-wrap:anywhere;min-width:0}.music-presets .music-preset-text{min-width:0}.music-discovery{min-width:0}.music-search-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.music-search-tabs button{border-radius:12px;min-height:38px;min-width:0;overflow-wrap:anywhere}.music-search-row{grid-template-columns:minmax(0,1fr) auto}.music-search-results{width:100%}.music-search-result{min-width:0}.music-config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.music-api-config{border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:10px 0 14px}.music-api-config summary{cursor:pointer;font-weight:700}.music-api-config .notice{margin-top:12px}.music-config-grid .field{min-width:0}.music-controls,.music-progress{max-width:100%}.music-tracks .item .track-heading{min-width:0;flex:1}.music-tracks .item .track-heading b{overflow-wrap:anywhere}.movement-layout,.studio-toolbar,.exercise-tiles{min-width:0}.week{grid-template-columns:repeat(7,minmax(0,1fr))}.day{min-width:0}
+@media(max-width:1140px){.fitmusic-grid{grid-template-columns:minmax(0,1fr)}.main{padding-left:23px;padding-right:23px}}
+@media(max-width:900px){.side{max-width:100vw}.main{padding-left:15px;padding-right:15px}.two,.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.two,.grid,.formgrid,.hero,.exercise-tiles,.movement-layout{grid-template-columns:minmax(0,1fr)}.fitmusic-grid{grid-template-columns:minmax(0,1fr)}.music-search-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.music-search-row{grid-template-columns:minmax(0,1fr)}.music-config-grid{grid-template-columns:minmax(0,1fr)}.music-platforms{grid-template-columns:repeat(2,minmax(0,1fr))}.music-search-result{flex-direction:column;align-items:stretch}.music-search-result .search-result-actions{width:100%}.music-search-result .btn{flex:1}.top{align-items:flex-start}.card{padding:16px}.music-tracks .item{align-items:flex-start}.week{gap:3px}.day{padding:8px 1px;font-size:10px}.day b{font-size:14px}}
+@media(max-width:375px){.music-controls{gap:7px}.music-presets .music-preset{padding:9px}.actions{width:100%}}
 </style><style>/* V1.3: personagem anatômico e controles realmente animados */
 .npc-articulated{display:block;width:100%;max-height:350px;min-height:230px;filter:drop-shadow(0 10px 17px rgba(0,0,0,.23));color:var(--text)}
 .npc-mini .npc-articulated{min-height:0;max-height:120px;filter:none}
@@ -67,7 +74,7 @@
 <div class="music-presets" id="musicPresets"><button type="button" class="music-preset selected" data-music-category="pesado"><span class="music-symbol">♜</span><span class="music-preset-text"><b>Treino pesado</b><small>Musculação • Hip-hop • Eletrônica</small></span><span class="music-indicator">◉</span></button><button type="button" class="music-preset" data-music-category="cardio"><span class="music-symbol">ϟ</span><span class="music-preset-text"><b>Corrida e cardio</b><small>Energia • Dance • EDM</small></span><span class="music-indicator">▷</span></button><button type="button" class="music-preset" data-music-category="foco"><span class="music-symbol">◎</span><span class="music-preset-text"><b>Foco e concentração</b><small>Instrumental • Lo-fi</small></span><span class="music-indicator">▷</span></button><button type="button" class="music-preset" data-music-category="personalizada"><span class="music-symbol">☷</span><span class="music-preset-text"><b>Playlist personalizada</b><small>Músicas escolhidas por você</small></span><span class="music-indicator">▷</span></button></div>
 <div class="fitmusic-player" aria-label="Player de música"><div class="row"><div class="now-cover" aria-hidden="true">♫</div><div class="now-info"><span class="eyebrow">TOCANDO AGORA</span><strong id="musicNowTitle">Nenhuma música selecionada</strong><small id="musicNowSubtitle">Adicione músicas ou playlists para começar</small></div><span id="musicPlayerMode" class="tag">Áudio</span></div><div id="playerBox" class="fitmusic-media" aria-label="Tela de reprodução de música dentro do Fit Music"></div><div class="music-inline-banner"><span id="musicInlineState">Pronto para reproduzir</span></div><audio id="musicAudio" preload="metadata"></audio><div class="music-progress"><span id="musicCurrentTime">0:00</span><input id="musicSeek" type="range" min="0" max="100" value="0" aria-label="Posição da música"><span id="musicTotalTime">0:00</span></div><div class="music-controls"><button type="button" class="music-ctrl" id="musicPrev" aria-label="Música anterior">⏮</button><button type="button" class="music-ctrl music-mainplay" id="musicToggle" aria-label="Reproduzir ou pausar">▶</button><button type="button" class="music-ctrl" id="musicNext" aria-label="Próxima música">⏭</button><label class="music-volume">♫ <input id="musicVolume" type="range" min="0" max="100" value="80" aria-label="Volume"></label></div><p class="notice" id="musicStatus" role="status">Escolha uma categoria e adicione suas músicas.</p></div></div>
 <div class="card fitmusic-library"><h3>Adicionar à trilha</h3><p class="muted" style="margin-top:4px">Adicione suas músicas e playlists.</p><label class="field">Categoria<select id="musicCategory"><option value="pesado">Treino pesado</option><option value="cardio">Corrida e cardio</option><option value="foco">Foco e concentração</option><option value="personalizada">Playlist personalizada</option></select></label><div class="music-upload"><label for="musicFiles" class="btn primary music-upload-btn">＋ Selecionar arquivos de áudio</label><input type="file" id="musicFiles" accept="audio/*,.mp3,.m4a,.ogg,.wav,.flac" multiple hidden><p class="notice">Áudios do dispositivo precisam ser adicionados novamente após recarregar a página.</p></div>
-<div class="music-discovery" id="musicDiscovery"><h3>Pesquisar músicas</h3><p class="muted">Encontre faixas do Audius ou pesquise na sua biblioteca.</p><div class="music-search-tabs" role="group" aria-label="Fonte da pesquisa"><button type="button" class="selected" data-search-source="audius" aria-pressed="true">♫ Audius</button><button type="button" data-search-source="library" aria-pressed="false">☷ Minha biblioteca</button></div><form id="musicSearchForm" class="music-search-row"><label class="field">Música ou artista<input id="musicSearchTerm" type="search" maxlength="90" placeholder="Digite o nome de uma música ou artista" autocomplete="off" required></label><button class="btn primary" type="submit">⌕ Pesquisar</button></form><p class="notice" id="musicSearchStatus" role="status" aria-live="polite" style="margin:9px 0">Digite um nome para pesquisar.</p><div class="music-search-results" id="musicSearchResults"></div></div>
+<div class="music-discovery" id="musicDiscovery"><h3>Pesquisar músicas</h3><p class="muted">Busque por música ou artista na plataforma desejada.</p><div class="music-search-tabs" role="group" aria-label="Fonte da pesquisa"><button type="button" data-search-source="all" aria-pressed="false">Todas</button><button type="button" data-search-source="youtube" aria-pressed="false">YouTube</button><button type="button" data-search-source="soundcloud" aria-pressed="false">SoundCloud</button><button type="button" data-search-source="spotify" aria-pressed="false">Spotify</button><button type="button" class="selected" data-search-source="audius" aria-pressed="true">Audius</button><button type="button" data-search-source="library" aria-pressed="false">Minha biblioteca</button></div><details class="music-api-config" id="musicApiConfig"><summary>Configurar pesquisa nas plataformas</summary><p class="notice">Audius funciona sem configuração. Para pesquisar nas demais plataformas, informe as credenciais de API autorizadas. Elas serão usadas apenas nesta aba e não serão salvas no site.</p><div class="music-config-grid"><label class="field">Chave da YouTube Data API<input type="password" id="musicYoutubeKey" autocomplete="off" placeholder="Chave com restrição de domínio"></label><label class="field">Token de acesso Spotify<input type="password" id="musicSpotifyToken" autocomplete="off" placeholder="Token OAuth válido"></label><label class="field">Token de acesso SoundCloud<input type="password" id="musicSoundcloudToken" autocomplete="off" placeholder="Token OAuth válido"></label></div><p class="notice">Não insira client secret. Para uso público e renovação automática de tokens, é necessário um backend seguro.</p></details><form id="musicSearchForm" class="music-search-row"><label class="field">Música ou artista<input id="musicSearchTerm" type="search" maxlength="90" placeholder="Digite o nome de uma música ou artista" autocomplete="off" required></label><button class="btn primary" type="submit">⌕ Pesquisar</button></form><p class="notice" id="musicSearchStatus" role="status" aria-live="polite" style="margin:9px 0">Digite um nome para pesquisar.</p><div class="music-search-results" id="musicSearchResults"></div></div>
 <div class="music-or">Ou adicione uma música ou playlist</div><div class="music-platforms" id="musicPlatforms"><button type="button" class="music-platform selected" data-service="youtube">▶ YouTube</button><button type="button" class="music-platform" data-service="soundcloud">☁ SoundCloud</button><button type="button" class="music-platform" data-service="spotify">◉ Spotify</button><button type="button" class="music-platform" data-service="audius">♫ Audius</button></div><form id="musicForm" class="formgrid"><label class="field wide">Nome da música ou playlist<input id="musicName" required maxlength="100" placeholder="Ex.: Minha playlist de corrida"></label><label class="field wide" id="musicLinkLabel">Link do YouTube<input type="url" id="musicUrl" required placeholder="https://www.youtube.com/watch?v=..."></label><button type="submit" class="btn primary wide">＋ Salvar playlist</button></form><h3 style="margin:24px 0 9px">Minha lista <span class="tag" id="musicCount">0</span></h3><div class="list music-tracks" id="musicList"></div><p class="notice">A reprodução depende das permissões de cada plataforma. Áudios locais não entram no backup.</p></div></div></section>
 <section id="perfil"><div class="sectionhead"><h2>Personalize seu universo</h2><p>Dados pessoais, metas, cores e segurança dos seus registros.</p></div><div class="two"><div class="card"><h3>Meu perfil</h3><form id="profileForm" class="formgrid"><label class="field">Nome ou apelido<input id="profileName" placeholder="Como deseja ser chamado?"></label><label class="field">Idade<input type="number" min="13" max="110" id="profileAge" placeholder="Anos"></label><label class="field">Altura (cm)<input type="number" min="100" max="240" id="profileHeight"></label><label class="field">Peso (kg)<input type="number" min="20" max="400" step="0.1" id="profileWeight"></label><label class="field">Objetivo<select id="profileGoal"><option value="saude">Saúde e condicionamento</option><option value="ganhar">Ganhar peso / massa muscular</option><option value="perder">Perder peso</option><option value="manter">Manter peso</option></select></label><label class="field">Biotipo (opcional)<select id="profileBody"><option value="">Não informar</option><option>Ectomorfo</option><option>Mesomorfo</option><option>Endomorfo</option></select></label><label class="field">Meta diária de água (ml)<input type="number" min="250" max="10000" step="50" id="profileWater"></label><label class="field">Lembrete de água (min)<input type="number" min="10" max="240" step="5" id="profileReminder"></label><button class="btn primary wide">Salvar perfil</button></form><p class="notice">Biotipo é opcional e não define seu treino ou alimentação.</p></div><div class="card"><h3>Identidade visual</h3><p class="muted">Quatro cores + modo claro/escuro.</p><div class="scheme" id="themeChoices"><button class="swatch selected" data-theme-choice="padrao" title="Padrão" style="background:#d9fa68"></button><button class="swatch" data-theme-choice="azul" title="Azul" style="background:#62cefa"></button><button class="swatch" data-theme-choice="rosa" title="Rosa" style="background:#ff91bd"></button><button class="swatch" data-theme-choice="roxo" title="Roxo" style="background:#b69cff"></button></div><div class="row" style="margin-top:20px"><span>Notificações de água</span><button class="btn" id="notifyBtn">Ativar</button></div><p class="notice">Lembretes funcionam enquanto o site está aberto.</p><hr style="border:0;border-top:1px solid var(--line);margin:25px 0"><h3>Backup pessoal</h3><div class="row"><button class="btn" id="exportBtn">Exportar JSON</button><label class="btn" style="cursor:pointer">Importar JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label></div><p class="notice">Seus dados ficam neste navegador. Faça backups para não perder seu histórico.</p></div></div></section>
 </div><div class="footer">FITNESS ORBIT • Dev Kayko</div></main></div><div id="toast" class="toast hidden" role="status"></div><script>
@@ -288,16 +295,50 @@ async function playEmbeddedMusic(t){
   }
   if(req!==soundCloudRequest||activeMusicId!==t.id)return;
   if(!embedUrl){musicStatus('Este link não ofereceu um player incorporado. Use o link Embed da faixa no Audius.');$('musicInlineState').textContent='Incorporação indisponível';return}
+  audiusFallbackUrl=embedUrl;
+  if(tryAudiusAudio({...t,url:embedUrl}))return;
   placeServiceFrame(embedUrl,'Audius — Fit Music',300);
-  $('musicInlineState').textContent='Audius incorporado';musicStatus('Para ouvir no Audius, pressione ▶ dentro do player acima.');
+  $('musicInlineState').textContent='Audius incorporado';musicStatus('Use ▶ dentro do player do Audius para esta playlist.');
  }
+}
+// Audius: faixas públicas podem ser tocadas pelo elemento HTMLAudio do Fit Music.
+// Playlists e links sem ID de faixa utilizam o widget oficial como alternativa.
+let audiusFallbackUrl=null;
+function audiusTrackId(url){
+ try{const u=new URL(url);const m=u.pathname.match(/^\/embed\/track\/([A-Za-z0-9_-]+)\/?$/);return m?m[1]:null}catch{return null}
+}
+function tryAudiusAudio(t){
+ const id=audiusTrackId(t.url);if(!id)return false;
+ audiusFallbackUrl='https://audius.co/embed/track/'+id;
+ const audio=$('musicAudio');
+ // Endpoint oficial Audius para streaming de músicas públicas.
+ audio.src='https://api.audius.co/v1/tracks/'+encodeURIComponent(id)+'/stream';
+ audio.volume=Number($('musicVolume').value)/100;
+ $('playerBox').replaceChildren();
+ $('musicInlineState').textContent='Audius · Faixa selecionada';
+ musicStatus('Carregando faixa do Audius…');
+ audio.play().then(()=>{if(activeMusicId===t.id){$('musicToggle').textContent='❚❚';musicStatus('Reproduzindo Audius.')}})
+ .catch(err=>{if(activeMusicId!==t.id)return;if(err?.name==='NotAllowedError'){musicStatus('Pressione ▶ para iniciar a faixa do Audius.');return}fallbackAudiusEmbed(t)});
+ return true;
+}
+function fallbackAudiusEmbed(t){
+ if(activeMusicId!==t.id||activeMusicType!=='audius')return;
+ const embed=audiusFallbackUrl||t.url;
+ if(!/https:\/\/audius\.co\/embed\/(track|playlist)\//.test(embed)){
+  musicStatus('Faixa indisponível para reprodução. Confira o link no Audius.');return;
+ }
+ $('musicAudio').pause();$('musicAudio').removeAttribute('src');
+ placeServiceFrame(embed,'Audius — Fit Music',300);
+ $('musicToggle').textContent='▶';
+ $('musicInlineState').textContent='Player Audius';
+ musicStatus('Não foi possível tocar pelo controle principal. Use ▶ no player do Audius.');
 }
 const musicAudio=$('musicAudio');musicAudio.volume=.8;
 function musicQueue(){return [...data.music.map(t=>({...t,kind:t.service||'youtube',category:t.category||'personalizada'})),...localTracks].filter(t=>t.category===musicCategory)}
 function musicAll(){return [...data.music.map(t=>({...t,kind:t.service||'youtube',category:t.category||'personalizada'})),...localTracks]}
 function musicStatus(message){$('musicStatus').textContent=message}
 function musicTime(secs){if(!Number.isFinite(secs))return '0:00';const t=Math.max(0,Math.floor(secs));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function stopCurrentMusic(){++youtubeRequest;++soundCloudRequest;++spotifyRequest;clearInterval(soundCloudTick);soundCloudTick=null;soundCloudWidget=null;spotifyDuration=0;if(spotifyController){try{spotifyController.destroy()}catch{}spotifyController=null}stopYoutube();musicAudio.pause();musicAudio.removeAttribute('src');musicAudio.load();activeMusicId=null;activeMusicType=null;$('musicToggle').textContent='▶';$('musicNowTitle').textContent='Nenhuma música selecionada';$('musicNowSubtitle').textContent=musicCategories[musicCategory];$('musicPlayerMode').textContent='Áudio';$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicSeek').value=0}
+function stopCurrentMusic(){audiusFallbackUrl=null;++youtubeRequest;++soundCloudRequest;++spotifyRequest;clearInterval(soundCloudTick);soundCloudTick=null;soundCloudWidget=null;spotifyDuration=0;if(spotifyController){try{spotifyController.destroy()}catch{}spotifyController=null}stopYoutube();musicAudio.pause();musicAudio.removeAttribute('src');musicAudio.load();activeMusicId=null;activeMusicType=null;$('musicToggle').textContent='▶';$('musicNowTitle').textContent='Nenhuma música selecionada';$('musicNowSubtitle').textContent=musicCategories[musicCategory];$('musicPlayerMode').textContent='Áudio';$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicSeek').value=0}
 function selectMusicCategory(category){if(!musicCategories[category])return;musicCategory=category;$('musicCategory').value=category;document.querySelectorAll('[data-music-category]').forEach(b=>{let on=b.dataset.musicCategory===category;b.classList.toggle('selected',on);b.querySelector('.music-indicator').textContent=on?'◉':'▷'});renderMusic();if(!musicQueue().length)musicStatus('Adicione uma música ou playlist para '+musicCategories[category].toLowerCase()+'.');else musicStatus(musicQueue().length+' item(ns) disponíveis nesta trilha.')}
 function playMusicItem(id){
   const t=musicAll().find(item=>item.id===id);
@@ -315,43 +356,71 @@ function playMusicItem(id){
 }
 function nextMusic(delta){let q=musicQueue();if(!q.length){musicStatus('Esta categoria não tem músicas.');return}let i=q.findIndex(x=>x.id===activeMusicId);let next=q[(i+delta+q.length)%q.length];playMusicItem(next.id)}
 function renderMusic(){let queue=musicQueue();$('musicCount').textContent=queue.length;$('musicList').innerHTML=queue.length?queue.map(t=>`<div class="item"><div class="track-heading"><b>${esc(t.name)}</b><small>${t.kind==='local'?'♫ Áudio local (temporário)':musicServices[t.kind]||'▶ YouTube'}</small></div><button type="button" class="btn" data-play="${esc(t.id)}" aria-label="Reproduzir ${esc(t.name)} aqui no site">${t.kind!=='local'?'▶ Ouvir aqui':'▶'}</button><button type="button" class="btn" data-delmusic="${esc(t.id)}" aria-label="Excluir ${esc(t.name)}">✕</button></div>`).join(''):'<p class="notice">Sua trilha está vazia. Adicione uma música ou playlist.</p>'}
-// Busca de música: Audius usa o endpoint público de leitura; outras plataformas permanecem por link.
+// Busca de música multi-serviço com credenciais opcionais por sessão.
 let searchMusicSource='audius',musicSearchCache=[],musicSearchNonce=0;
 function showMusicSearchState(message){$('musicSearchStatus').textContent=message}
-function musicSearchResultHtml(entry,i){const label=entry.artist||entry.service||'Música';return `<div class="music-search-result"><div class="search-result-info"><b>${esc(entry.title)}</b><small>${esc(label)}</small></div><div class="search-result-actions"><button type="button" class="btn primary" data-search-play="${i}">▶ Ouvir</button><button type="button" class="btn" data-search-save="${i}">＋ Salvar</button></div></div>`}
+function musicSearchResultHtml(entry,i){const label=(musicServices[entry.service]||'Biblioteca')+(entry.artist?' · '+entry.artist:'');return `<div class="music-search-result"><div class="search-result-info"><b>${esc(entry.title)}</b><small>${esc(label)}</small></div><div class="search-result-actions"><button type="button" class="btn primary" data-search-play="${i}">▶ Ouvir</button><button type="button" class="btn" data-search-save="${i}">＋ Salvar</button></div></div>`}
 function renderMusicSearchResults(){let box=$('musicSearchResults');box.innerHTML=musicSearchCache.length?musicSearchCache.map(musicSearchResultHtml).join(''):'<p class="notice">Nenhuma faixa encontrada.</p>'}
+const musicSearchCredentials=()=>({youtube:$('musicYoutubeKey').value.trim(),spotify:$('musicSpotifyToken').value.trim(),soundcloud:$('musicSoundcloudToken').value.trim()});
+async function searchMusicProvider(service,query,signal){
+ const keys=musicSearchCredentials();let response,payload,items;
+ if(service==='audius'){
+  response=await fetch('https://api.audius.co/v1/tracks/search?query='+encodeURIComponent(query)+'&limit=12',{signal,headers:{Accept:'application/json'}});
+  if(!response.ok)throw Error('Audius: HTTP '+response.status);payload=await response.json();items=Array.isArray(payload.data)?payload.data:[];
+  return items.filter(t=>t&&/^[\w-]{2,80}$/.test(String(t.id||''))&&!t.is_stream_gated).map(t=>({title:String(t.title||'Música'),artist:String(t.user?.name||t.user?.handle||''),url:'https://audius.co/embed/track/'+t.id,service}));
+ }
+ if(service==='youtube'){
+  if(!keys.youtube)throw Error('YouTube: configure a chave da API.');
+  const args=new URLSearchParams({part:'snippet',q:query,type:'video',videoEmbeddable:'true',maxResults:'12',key:keys.youtube});
+  response=await fetch('https://www.googleapis.com/youtube/v3/search?'+args,{signal});if(!response.ok)throw Error('YouTube: verifique sua chave e a cota ('+response.status+').');
+  payload=await response.json();return (payload.items||[]).filter(t=>/^[A-Za-z0-9_-]{11}$/.test(t.id?.videoId||'')).map(t=>({title:t.snippet?.title||'Vídeo',artist:t.snippet?.channelTitle||'',url:'https://www.youtube.com/watch?v='+t.id.videoId,service}));
+ }
+ if(service==='spotify'){
+  if(!keys.spotify)throw Error('Spotify: informe um token OAuth válido.');
+  response=await fetch('https://api.spotify.com/v1/search?'+new URLSearchParams({q:query,type:'track',limit:'12'}),{headers:{Authorization:'Bearer '+keys.spotify},signal});
+  if(!response.ok)throw Error('Spotify: token inválido, expirado ou acesso indisponível ('+response.status+').');
+  payload=await response.json();return (payload.tracks?.items||[]).filter(t=>/^[A-Za-z0-9]+$/.test(t.id||'')).map(t=>({title:t.name||'Música',artist:(t.artists||[]).map(a=>a.name).join(', '),url:'https://open.spotify.com/track/'+t.id,service}));
+ }
+ if(service==='soundcloud'){
+  if(!keys.soundcloud)throw Error('SoundCloud: informe um token OAuth válido.');
+  response=await fetch('https://api.soundcloud.com/tracks?'+new URLSearchParams({q:query,limit:'12'}),{headers:{Authorization:'OAuth '+keys.soundcloud,Accept:'application/json'},signal});
+  if(!response.ok)throw Error('SoundCloud: token inválido ou acesso indisponível ('+response.status+').');
+  payload=await response.json();items=Array.isArray(payload)?payload:(payload.collection||[]);
+  return items.filter(t=>{try{return new URL(t.permalink_url).hostname.endsWith('soundcloud.com')}catch{return false}}).map(t=>({title:t.title||'Música',artist:t.user?.username||'',url:t.permalink_url,service}));
+ }
+ return [];
+}
 async function executeMusicSearch(){
  const query=$('musicSearchTerm').value.trim();if(!query){showMusicSearchState('Digite o nome da música ou artista.');return}
  const nonce=++musicSearchNonce;musicSearchCache=[];$('musicSearchResults').replaceChildren();
  if(searchMusicSource==='library'){
-  const q=query.toLocaleLowerCase('pt-BR');musicSearchCache=musicAll().filter(t=>t.name.toLocaleLowerCase('pt-BR').includes(q)).map(t=>({title:t.name,artist:musicServices[t.kind]||'Áudio local',existingId:t.id,service:t.kind}));
-  showMusicSearchState(musicSearchCache.length?musicSearchCache.length+' resultado(s) na sua biblioteca.':'Nenhuma música encontrada na biblioteca.');renderMusicSearchResults();return;
+  const q=query.toLocaleLowerCase('pt-BR');musicSearchCache=musicAll().filter(t=>t.name.toLocaleLowerCase('pt-BR').includes(q)).map(t=>({title:t.name,artist:'',existingId:t.id,service:t.kind}));
+  showMusicSearchState(musicSearchCache.length+' resultado(s) na sua biblioteca.');renderMusicSearchResults();return;
  }
- showMusicSearchState('Pesquisando no Audius…');
+ const sources=searchMusicSource==='all'?['audius','youtube','soundcloud','spotify']:[searchMusicSource];
+ showMusicSearchState('Pesquisando…');const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),16000);
  try{
-  const url='https://api.audius.co/v1/tracks/search?query='+encodeURIComponent(query)+'&limit=15';
-  const response=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(14000)});
-  if(!response.ok)throw new Error('HTTP '+response.status);
-  const payload=await response.json();if(nonce!==musicSearchNonce)return;
-  const tracks=Array.isArray(payload.data)?payload.data:[];
-  musicSearchCache=tracks.filter(t=>t&&/^[\w-]{2,60}$/.test(String(t.id||''))&&!t.is_stream_gated).map(t=>({title:String(t.title||'Faixa sem título'),artist:String(t.user?.name||t.user?.handle||'Audius'),url:'https://audius.co/embed/track/'+t.id,service:'audius'}));
-  showMusicSearchState(musicSearchCache.length?musicSearchCache.length+' música(s) encontrada(s).':'Nenhuma faixa disponível encontrada.');renderMusicSearchResults();
- }catch(e){if(nonce!==musicSearchNonce)return;showMusicSearchState('Não foi possível consultar o Audius. Verifique a conexão e tente novamente.');}
+  const results=await Promise.allSettled(sources.map(source=>searchMusicProvider(source,query,controller.signal)));
+  if(nonce!==musicSearchNonce)return;
+  musicSearchCache=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+  const errors=results.filter(r=>r.status==='rejected').map(r=>r.reason?.message||'Serviço indisponível');
+  showMusicSearchState(musicSearchCache.length+' resultado(s).'+(errors.length?' '+errors.join(' · '):''));renderMusicSearchResults();
+ }finally{clearTimeout(timer)}
 }
-$('musicSearchForm').addEventListener('submit',e=>{e.preventDefault();executeMusicSearch()});
+$('musicSearchForm').addEventListener('submit',e=>{e.preventDefault();executeMusicSearch().catch(()=>showMusicSearchState('Falha na pesquisa. Confira sua conexão e as credenciais.'))});
 $('musicDiscovery').addEventListener('click',e=>{
  const sourceBtn=e.target.closest('[data-search-source]');if(sourceBtn){
   searchMusicSource=sourceBtn.dataset.searchSource;++musicSearchNonce;musicSearchCache=[];$('musicSearchResults').replaceChildren();
   document.querySelectorAll('[data-search-source]').forEach(b=>{const active=b.dataset.searchSource===searchMusicSource;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});
-  showMusicSearchState(searchMusicSource==='audius'?'Pesquise no catálogo do Audius.':'Pesquise as músicas que você salvou.');return;
+  showMusicSearchState('Digite um nome para pesquisar em '+({all:'todas as plataformas configuradas',library:'sua biblioteca',youtube:'YouTube',spotify:'Spotify',soundcloud:'SoundCloud',audius:'Audius'}[searchMusicSource])+'.');return;
  }
  const b=e.target.closest('[data-search-play],[data-search-save]');if(!b)return;
- const index=Number(b.dataset.searchPlay??b.dataset.searchSave);const result=musicSearchCache[index];if(!result)return;
+ const index=Number(b.dataset.searchPlay??b.dataset.searchSave),result=musicSearchCache[index];if(!result)return;
  if(result.existingId){if(b.hasAttribute('data-search-play'))playMusicItem(result.existingId);else toast('Esta música já está na biblioteca.');return;}
- if(!result.url||!validatedMusicUrl(result.url,'audius'))return;
+ if(!result.url||!validatedMusicUrl(result.url,result.service)){toast('Link incompatível com o player.');return}
  let saved=data.music.find(t=>t.url===result.url);
- if(!saved){saved={id:uid(),name:result.title+' — '+result.artist,url:result.url,category:musicCategory,service:'audius'};data.music.push(saved);save();renderMusic()}
- if(b.hasAttribute('data-search-play')){playMusicItem(saved.id);musicStatus('Reproduza pelo controle do Audius.')}else toast('Música salva sem interromper a reprodução.');
+ if(!saved){saved={id:uid(),name:result.title+(result.artist?' — '+result.artist:''),url:result.url,category:musicCategory,service:result.service};data.music.push(saved);save();renderMusic()}
+ if(b.hasAttribute('data-search-play'))playMusicItem(saved.id);else toast('Música salva sem interromper a reprodução.');
 });
 $('musicPresets').addEventListener('click',e=>{let b=e.target.closest('[data-music-category]');if(b)selectMusicCategory(b.dataset.musicCategory)});
 $('musicCategory').addEventListener('change',e=>selectMusicCategory(e.target.value));
@@ -363,8 +432,8 @@ $('musicToggle').addEventListener('click',()=>{if(activeMusicType==='soundcloud'
  else musicStatus('Use o botão ▶ dentro do player do Spotify.');
  return;
 }
-if(activeMusicType==='audius'){
- musicStatus('Para ouvir Audius, pressione ▶ dentro do player incorporado acima.');
+if(activeMusicType==='audius'&&$('playerBox').querySelector('iframe')){
+ musicStatus('Esta playlist utiliza o player incorporado do Audius.');
  $('playerBox').scrollIntoView({behavior:'smooth',block:'nearest'});
  return;
 }if(activeMusicType==='youtube'){
@@ -372,16 +441,16 @@ if(activeMusicType==='audius'){
   const state=youtubePlayer.getPlayerState();
   if(state===YT.PlayerState.PLAYING)youtubePlayer.pauseVideo();else youtubePlayer.playVideo();
   return;
-}if(!activeMusicId){let first=musicQueue()[0];if(first)playMusicItem(first.id);else musicStatus('Adicione uma música antes de reproduzir.');return}if(musicAudio.paused){musicAudio.play().then(()=>$('musicToggle').textContent='❚❚').catch(()=>musicStatus('Não foi possível reproduzir este arquivo.'))}else{musicAudio.pause();$('musicToggle').textContent='▶'}});
+}if(!activeMusicId){let first=musicQueue()[0];if(first)playMusicItem(first.id);else musicStatus('Adicione uma música antes de reproduzir.');return}if(musicAudio.paused){musicAudio.play().then(()=>$('musicToggle').textContent='❚❚').catch(()=>musicStatus('Não foi possível iniciar a reprodução.'))}else{musicAudio.pause();$('musicToggle').textContent='▶'}});
 $('musicPrev').addEventListener('click',()=>nextMusic(-1));$('musicNext').addEventListener('click',()=>nextMusic(1));
 $('musicVolume').addEventListener('input',e=>{const vol=Number(e.target.value);musicAudio.volume=vol/100;if(youtubeReady&&youtubePlayer)youtubePlayer.setVolume(vol);if(activeMusicType==='soundcloud'&&soundCloudWidget)soundCloudWidget.setVolume(vol)});
-$('musicSeek').addEventListener('input',e=>{if(activeMusicType==='local'&&Number.isFinite(musicAudio.duration))musicAudio.currentTime=Number(e.target.value)/100*musicAudio.duration;else if(activeMusicType==='soundcloud'&&soundCloudWidget&&soundCloudDuration>0){soundCloudWidget.seekTo(Number(e.target.value)/100*soundCloudDuration)}else if(activeMusicType==='spotify'&&spotifyController&&spotifyDuration>0){spotifyController.seek(Math.floor(Number(e.target.value)/100*spotifyDuration/1000))}else if(activeMusicType==='youtube'&&youtubeReady&&youtubePlayer){const duration=youtubePlayer.getDuration();if(duration>0)youtubePlayer.seekTo(Number(e.target.value)/100*duration,true)}});
+$('musicSeek').addEventListener('input',e=>{if(['local','audius'].includes(activeMusicType)&&!$('playerBox').querySelector('iframe')&&Number.isFinite(musicAudio.duration))musicAudio.currentTime=Number(e.target.value)/100*musicAudio.duration;else if(activeMusicType==='soundcloud'&&soundCloudWidget&&soundCloudDuration>0){soundCloudWidget.seekTo(Number(e.target.value)/100*soundCloudDuration)}else if(activeMusicType==='spotify'&&spotifyController&&spotifyDuration>0){spotifyController.seek(Math.floor(Number(e.target.value)/100*spotifyDuration/1000))}else if(activeMusicType==='youtube'&&youtubeReady&&youtubePlayer){const duration=youtubePlayer.getDuration();if(duration>0)youtubePlayer.seekTo(Number(e.target.value)/100*duration,true)}});
 musicAudio.addEventListener('timeupdate',()=>{$('musicCurrentTime').textContent=musicTime(musicAudio.currentTime);$('musicTotalTime').textContent=musicTime(musicAudio.duration);$('musicSeek').value=Number.isFinite(musicAudio.duration)&&musicAudio.duration>0?String(Math.round(musicAudio.currentTime/musicAudio.duration*100)):'0'});
 musicAudio.addEventListener('loadedmetadata',()=>$('musicTotalTime').textContent=musicTime(musicAudio.duration));
-musicAudio.addEventListener('pause',()=>{if(activeMusicType==='local')$('musicToggle').textContent='▶'});
-musicAudio.addEventListener('play',()=>{if(activeMusicType==='local')$('musicToggle').textContent='❚❚'});
+musicAudio.addEventListener('pause',()=>{if(['local','audius'].includes(activeMusicType))$('musicToggle').textContent='▶'});
+musicAudio.addEventListener('play',()=>{if(['local','audius'].includes(activeMusicType))$('musicToggle').textContent='❚❚'});
 musicAudio.addEventListener('ended',()=>{if(musicQueue().length>1)nextMusic(1);else{$('musicToggle').textContent='▶';musicStatus('Fim da trilha.')}});
-musicAudio.addEventListener('error',()=>{if(activeMusicType==='local')musicStatus('Formato de áudio não suportado ou arquivo indisponível.')});
+musicAudio.addEventListener('error',()=>{if(activeMusicType==='local')musicStatus('Formato de áudio não suportado ou arquivo indisponível.');else if(activeMusicType==='audius'){const t=musicAll().find(x=>x.id===activeMusicId);if(t)fallbackAudiusEmbed(t)}});
 selectMusicCategory('pesado');
 function syncProfile(){let p=data.profile;for(let k of ['name','age','height','weight','goal','body','water','reminder'])$('profile'+k[0].toUpperCase()+k.slice(1)).value=p[k]??''}$('profileForm').onsubmit=e=>{e.preventDefault();for(let k of ['name','age','height','weight','goal','body','water','reminder'])data.profile[k]=$('profile'+k[0].toUpperCase()+k.slice(1)).value;save();render();toast('Perfil atualizado.')};let reminderTimer=null;async function setNotification(){if(!('Notification' in window)){toast('Notificações indisponíveis neste navegador.');return}const permission=await Notification.requestPermission();data.settings.notify=permission==='granted';save();applyReminders();toast(data.settings.notify?'Avisos ativados enquanto o site estiver aberto.':'Permissão de notificações não concedida.')}function applyReminders(){clearInterval(reminderTimer);$('notifyBtn').textContent=data.settings.notify?'Desativar':'Ativar';if(data.settings.notify&&'Notification' in window&&Notification.permission==='granted'){const min=Math.max(10,Number(data.profile.reminder)||60);reminderTimer=setInterval(()=>{if(document.visibilityState==='visible')new Notification('Fitness Orbit',{body:'Hora de conferir sua hidratação! 💧'})},min*60000)}}$('notifyBtn').onclick=()=>{if(data.settings.notify){data.settings.notify=false;save();applyReminders()}else setNotification()};$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='fitness-orbit-backup-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.workouts)||!Array.isArray(parsed.history)||!Array.isArray(parsed.activities)||!Array.isArray(parsed.measures)||!Array.isArray(parsed.music)||!parsed.profile||!parsed.settings||!parsed.water)throw Error('Formato não reconhecido');if(confirm('Substituir todos os dados atuais pelos dados do backup?')){data=parsed;save();theme();syncProfile();render();toast('Backup importado!')}}catch{toast('Arquivo de backup inválido.')}e.target.value=''};function render(){renderHome();renderWorkouts();renderActivities();renderMeasures();renderMusic();syncProfile();applyReminders()}
 // Biblioteca offline: demonstrações 2D esquemáticas e mapa muscular de referência.
