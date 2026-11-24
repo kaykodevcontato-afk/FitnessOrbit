@@ -1,0 +1,5 @@
+FITNESS ORBIT — Atualização da galeria
+Abra index.html mantendo todas as pastas juntas.
+78 imagens femininas incluídas.
+Para adicionar as masculinas, copie-as para assets/academia/masculino, usando os mesmos nomes das femininas (lista em assets/lista-imagens.csv). WebP recomendado; PNG, JPG e JPEG também aceitos. Use nomes em minúsculas, sem acentos.
+A galeria inicia no feminino quando não há gênero definido no perfil; a seleção manual continua disponível. Imagens ausentes exibem Imagem em breve.
