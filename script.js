@@ -1,4 +1,32 @@
-'use strict';const KEY='fitness-orbit-v1',today=()=>new Date().toLocaleDateString('sv-SE'),now=()=>new Date().toISOString(),uid=()=>String(Date.now())+Math.random().toString(36).slice(2,7);const initial={profile:{name:'',age:'',gender:'',height:'',weight:'',goal:'saude',body:'',water:2000,reminder:60},water:{},workouts:[],history:[],activities:[],measures:[],music:[],settings:{theme:'azul',light:false,notify:false}};let data;try{const stored=JSON.parse(localStorage.getItem(KEY));data=stored&&typeof stored==='object'?{...structuredClone(initial),...stored}:structuredClone(initial)}catch{data=structuredClone(initial)};const $=id=>document.getElementById(id),all=s=>document.querySelectorAll(s),save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch{toast('Não foi possível salvar. Verifique o espaço do navegador.')}};function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.add('hidden'),3600)}const n=(v,d=0)=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});const titles={inicio:'Seu movimento começa aqui.',treinos:'Treino é constância.',alimentacao:'Alimente seu objetivo.',atividade:'Lá fora, o mundo é pista.',evolucao:'Cada conquista conta.',musica:'Entre no seu ritmo.',perfil:'Seu espaço, suas regras.'};function page(p){all('.sections>section').forEach(e=>e.classList.toggle('active',e.id===p));all('.nav').forEach(e=>e.classList.toggle('on',e.dataset.page===p));$('pageTitle').textContent=titles[p];window.scrollTo({top:0,behavior:'smooth'});render()}all('[data-page]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));all('[data-go]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.go)));function theme(){data.settings={...initial.settings,...data.settings};if(!['azul','rosa','roxo','vermelho'].includes(data.settings.theme))data.settings.theme='azul';document.body.dataset.theme=data.settings.theme;document.body.classList.toggle('light',!!data.settings.light);all('[data-theme-choice]').forEach(b=>{const active=b.dataset.themeChoice===data.settings.theme;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});all('[data-mode-choice]').forEach(b=>{const active=(b.dataset.modeChoice==='light')===!!data.settings.light;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});document.querySelector('meta[name="theme-color"]').content=getComputedStyle(document.body).getPropertyValue('--bg').trim()}all('[data-theme-choice]').forEach(b=>b.onclick=()=>{data.settings.theme=b.dataset.themeChoice;save();theme()});all('[data-mode-choice]').forEach(b=>b.onclick=()=>{data.settings.light=b.dataset.modeChoice==='light';save();theme()});function water(){let cur=Number(data.water[today()]||0),target=Number(data.profile.water||2000),pct=Math.max(0,Math.round(cur/target*100));$('waterNow').textContent=n(cur)+' ml';$('waterTarget').textContent='Meta '+n(target)+' ml';$('waterBadge').textContent=pct+'%';$('waterCircle').style.setProperty('--p',Math.min(100,pct)+'%')}all('[data-water]').forEach(b=>b.onclick=()=>{data.water[today()]=Number(data.water[today()]||0)+Number(b.dataset.water);save();water()});$('resetWater').onclick=()=>{if(confirm('Zerar água registrada hoje?')){data.water[today()]=0;save();water()}};const days=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];function renderHome(){water();$('statWorkouts').textContent=data.history.length;$('statWeight').textContent=data.profile.weight?n(data.profile.weight,1):'—';$('statKm').textContent=n(data.activities.reduce((a,v)=>a+(Number(v.km)||0),0),1);let upcoming=data.workouts[0];$('nextWorkout').innerHTML=upcoming?`<b>${esc(upcoming.name)}</b><p class="muted">${esc(upcoming.day)} · ${esc(upcoming.type)} · ${n(upcoming.minutes)} min</p><div class="notice">${esc(upcoming.exercises).replace(/\n/g,'<br>')}</div>`:'Cadastre seu primeiro treino.';let current=new Date().getDay();$('weekStrip').innerHTML=days.slice(1).concat(days[0]).map((d,i)=>`<div class="day" style="${((i+1)%7)===current?'outline:2px solid var(--accent)':''}">${d.slice(0,3)}<b>${data.workouts.filter(w=>w.day===d).length?'●':'–'}</b></div>`).join('')};const workoutTemplates={
+'use strict';
+const KEY='fitness-orbit-v1',today=()=>new Date().toLocaleDateString('sv-SE'),now=()=>new Date().toISOString(),uid=()=>String(Date.now())+Math.random().toString(36).slice(2,7);
+const defaultMusicCategories=[
+  {id:'pesado',name:'Treino pesado',subtitle:'Musculação • Hip-hop • Eletrônica',icon:'♜'},
+  {id:'cardio',name:'Corrida e cardio',subtitle:'Energia • Dance • EDM',icon:'ϟ'},
+  {id:'foco',name:'Foco e concentração',subtitle:'Instrumental • Lo-fi',icon:'◎'},
+  {id:'personalizada',name:'Playlist personalizada',subtitle:'Músicas escolhidas por você',icon:'☷'}
+];
+const initial={profile:{name:'',age:'',gender:'',height:'',weight:'',goal:'saude',body:'',water:2000,reminder:60},water:{},workouts:[],history:[],activities:[],measures:[],music:[],musicCategories:structuredClone(defaultMusicCategories),settings:{theme:'azul',light:false,notify:false}};
+let data;
+try{const stored=JSON.parse(localStorage.getItem(KEY));data=stored&&typeof stored==='object'?{...structuredClone(initial),...stored}:structuredClone(initial)}catch{data=structuredClone(initial)}
+const $=id=>document.getElementById(id),all=s=>document.querySelectorAll(s),save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch{toast('Não foi possível salvar. Verifique o espaço do navegador.')}};
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.add('hidden'),3600)}
+const n=(v,d=0)=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const titles={inicio:'Seu movimento começa aqui.',treinos:'Treino é constância.',alimentacao:'Alimente seu objetivo.',atividade:'Lá fora, o mundo é pista.',evolucao:'Cada conquista conta.',musica:'Entre no seu ritmo.',perfil:'Seu espaço, suas regras.'};
+function page(p){all('.sections>section').forEach(e=>e.classList.toggle('active',e.id===p));all('.nav').forEach(e=>e.classList.toggle('on',e.dataset.page===p));$('pageTitle').textContent=titles[p];window.scrollTo({top:0,behavior:'smooth'});render()}
+all('[data-page]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
+all('[data-go]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.go)));
+function theme(){data.settings={...initial.settings,...data.settings};if(!['azul','rosa','roxo','vermelho'].includes(data.settings.theme))data.settings.theme='azul';document.body.dataset.theme=data.settings.theme;document.body.classList.toggle('light',!!data.settings.light);all('[data-theme-choice]').forEach(b=>{const active=b.dataset.themeChoice===data.settings.theme;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});all('[data-mode-choice]').forEach(b=>{const active=(b.dataset.modeChoice==='light')===!!data.settings.light;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});document.querySelector('meta[name="theme-color"]').content=getComputedStyle(document.body).getPropertyValue('--bg').trim()}
+all('[data-theme-choice]').forEach(b=>b.onclick=()=>{data.settings.theme=b.dataset.themeChoice;save();theme()});
+all('[data-mode-choice]').forEach(b=>b.onclick=()=>{data.settings.light=b.dataset.modeChoice==='light';save();theme()});
+function water(){let cur=Number(data.water[today()]||0),target=Number(data.profile.water||2000),pct=Math.max(0,Math.round(cur/target*100));$('waterNow').textContent=n(cur)+' ml';$('waterTarget').textContent='Meta '+n(target)+' ml';$('waterBadge').textContent=pct+'%';$('waterCircle').style.setProperty('--p',Math.min(100,pct)+'%')}
+all('[data-water]').forEach(b=>b.onclick=()=>{data.water[today()]=Number(data.water[today()]||0)+Number(b.dataset.water);save();water()});
+$('resetWater').onclick=()=>{if(confirm('Zerar água registrada hoje?')){data.water[today()]=0;save();water()}};
+const days=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+function renderHome(){water();$('statWorkouts').textContent=data.history.length;$('statWeight').textContent=data.profile.weight?n(data.profile.weight,1):'—';$('statKm').textContent=n(data.activities.reduce((a,v)=>a+(Number(v.km)||0),0),1);let upcoming=data.workouts[0];$('nextWorkout').innerHTML=upcoming?`<b>${esc(upcoming.name)}</b><p class="muted">${esc(upcoming.day)} · ${esc(upcoming.type)} · ${n(upcoming.minutes)} min</p><div class="notice">${esc(upcoming.exercises).replace(/\n/g,'<br>')}</div>`:'Cadastre seu primeiro treino.';let current=new Date().getDay();$('weekStrip').innerHTML=days.slice(1).concat(days[0]).map((d,i)=>`<div class="day" style="${((i+1)%7)===current?'outline:2px solid var(--accent)':''}">${d.slice(0,3)}<b>${data.workouts.filter(w=>w.day===d).length?'●':'–'}</b></div>`).join('')}
+
+const workoutTemplates={
 Academia:{name:'Treino de musculação',minutes:50,description:'Máquinas, pesos livres e progressão de carga.',exercises:'Agachamento — 3×10 — carga confortável\nSupino — 3×10 — carga confortável\nRemada — 3×12 — carga confortável\nDesenvolvimento de ombros — 3×10\nPrancha — 3×30 segundos'},
 Casa:{name:'Treino funcional em casa',minutes:30,description:'Exercícios práticos para fazer em casa no seu ritmo.',exercises:'Agachamento livre — 3×12\nFlexão de braço (ou com joelhos apoiados) — 3×8\nPonte de glúteos — 3×12\nAfundo alternado — 2×10 cada perna\nPrancha — 3×20 segundos'},
 Rua:{name:'Caminhada ou corrida ao ar livre',minutes:35,description:'Planeje seu percurso de caminhada ou corrida ao ar livre.',exercises:'Aquecimento: caminhada leve — 5 min\nCaminhada em ritmo confortável — 20 min\nOpcional: trote leve — 5 min\nDesaceleração — 5 min'},
@@ -14,15 +42,135 @@ function selectWorkoutType(type,edit=false){
 }
 $('workoutChoices').onclick=e=>{let btn=e.target.closest('[data-choose-workout]');if(btn)selectWorkoutType(btn.dataset.chooseWorkout)};
 $('workoutType').onchange=e=>selectWorkoutType(e.target.value,Boolean($('workoutId').value));
-function renderWorkouts(){$('workoutCount').textContent=data.workouts.length+' treino(s)';$('workoutList').innerHTML=data.workouts.length?data.workouts.map(w=>`<div class="item"><div><strong>${esc(w.name)}</strong><small>${esc(w.type)} · ${esc(w.day)} · ${n(w.minutes)} min</small><div class="notice">${esc(w.exercises).replace(/\n/g,'<br>')}</div><div class="exercise-line-actions" data-exercise-buttons="${esc(w.id)}"></div></div><div class="row"><button class="btn" data-edit="${esc(w.id)}">Editar</button><button class="btn primary" data-done="${esc(w.id)}">Concluir</button><button class="btn" data-del="${esc(w.id)}">Excluir</button></div></div>`).join(''):'Nenhum treino cadastrado.';renderWorkoutExerciseButtons();$('workoutHistory').innerHTML=data.history.length?data.history.slice().reverse().slice(0,25).map(h=>`<div class="item"><div><b>${esc(h.name)}</b><small>${new Date(h.date).toLocaleString('pt-BR')} · ${esc(h.type)} · ${n(h.minutes)} min</small></div><button class="btn" data-delhistory="${esc(h.id)}">Excluir</button></div>`).join(''):'Sem treinos concluídos ainda.'}function clearWorkout(){$('workoutForm').reset();$('workoutId').value='';$('workoutEditor').classList.remove('opened');$('workoutFormTitle').textContent='Novo treino';document.querySelectorAll('[data-choose-workout]').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false')})}$('workoutClear').onclick=clearWorkout;$('workoutForm').onsubmit=e=>{e.preventDefault();const id=$('workoutId').value;const w={id:id||uid(),name:$('workoutName').value.trim(),type:$('workoutType').value,day:$('workoutDay').value,minutes:Number($('workoutMinutes').value),exercises:$('workoutExercises').value.trim()};if(!w.name||!w.exercises)return;const pos=data.workouts.findIndex(x=>x.id===id);pos>=0?data.workouts[pos]=w:data.workouts.push(w);save();clearWorkout();render();toast('Treino salvo!')};$('workoutList').onclick=e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.edit||b.dataset.done||b.dataset.del,w=data.workouts.find(x=>x.id===id);if(!w)return;if(b.dataset.edit){selectWorkoutType(workoutTemplates[w.type]?w.type:'Rua',true);$('workoutId').value=w.id;$('workoutName').value=w.name;$('workoutType').value=w.type;$('workoutDay').value=w.day;$('workoutMinutes').value=w.minutes;$('workoutExercises').value=w.exercises;$('workoutFormTitle').textContent='Editar treino';$('workoutName').focus()}else if(b.dataset.done){data.history.push({...w,id:uid(),date:now()});save();render();toast('Treino concluído!')}else if(confirm('Excluir este treino?')){data.workouts=data.workouts.filter(x=>x.id!==id);save();render()}};$('workoutHistory').onclick=e=>{let id=e.target.closest('[data-delhistory]')?.dataset.delhistory;if(id&&confirm('Apagar este histórico?')){data.history=data.history.filter(h=>h.id!==id);save();render()}};
-const mealSets={comum:{ganhar:[['Café da manhã','Ovos, pão integral e fruta'],['Almoço','Arroz, feijão, frango e legumes'],['Lanche','Iogurte e banana com aveia'],['Jantar','Batata, peixe e salada']],perder:[['Café da manhã','Ovos e fruta'],['Almoço','Arroz, feijão, proteína magra e salada'],['Lanche','Fruta e iogurte natural'],['Jantar','Legumes, proteína e porção de carboidrato']],saude:[['Café da manhã','Fruta, aveia e iogurte'],['Almoço','Arroz, feijão, frango e salada'],['Lanche','Fruta e castanhas'],['Jantar','Omelete, legumes e batata']]},vegetariana:{ganhar:[['Café da manhã','Aveia, leite ou bebida vegetal e banana'],['Almoço','Arroz, feijão, tofu e legumes'],['Lanche','Iogurte ou alternativa vegetal e frutas'],['Jantar','Lentilha, quinoa e vegetais']],perder:[['Café da manhã','Frutas e aveia'],['Almoço','Grão-de-bico, arroz integral e salada'],['Lanche','Iogurte ou alternativa vegetal'],['Jantar','Tofu, verduras e legumes']],saude:[['Café da manhã','Fruta e aveia'],['Almoço','Arroz, feijão e vegetais'],['Lanche','Frutas e sementes'],['Jantar','Lentilha e legumes']]}};$('makeMeal').onclick=()=>{let pref=$('foodPreference').value,goal=data.profile.goal,group=goal==='ganhar'?'ganhar':goal==='perder'?'perder':'saude',notes=$('foodNotes').value.trim(),meals=mealSets[pref][group];$('mealResult').innerHTML=`<div class="tag" style="margin-bottom:12px">Objetivo: ${esc($('profileGoal').selectedOptions[0]?.textContent||goal)}</div>${meals.map(([a,b])=>`<div class="meal"><b>${esc(a)}</b>${esc(b)}</div>`).join('')}${notes?`<p class="notice">Observações: ${esc(notes)}</p>`:''}`};
-function gpsDistance(a,b){let R=6371e3,p1=a.lat*Math.PI/180,p2=b.lat*Math.PI/180,dp=(b.lat-a.lat)*Math.PI/180,dl=(b.lon-a.lon)*Math.PI/180,x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}let tracking=null;function secFormat(sec){let h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h?h+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}function kcal(sec,type){let met=type==='Corrida'?8.3:3.5,kg=Number(data.profile.weight||70);return Math.round(met*3.5*kg/200*(sec/60))}function gpsUi(){let sec=tracking?Math.floor((Date.now()-tracking.started)/1000):0,km=tracking?.meters/1000||0;$('gpsKm').textContent=n(km,2);$('gpsTime').textContent=secFormat(sec);$('gpsCal').textContent=kcal(sec,$('trackType').value);$('startGps').disabled=!!tracking;$('stopGps').disabled=!tracking}function gpsStart(){if(!navigator.geolocation){toast('GPS indisponível neste navegador.');return}if(!window.isSecureContext){toast('Localização disponível apenas em ambiente seguro (HTTPS).');return}tracking={started:Date.now(),meters:0,last:null,watch:null,tick:null,type:$('trackType').value};$('gpsStatus').textContent='Solicitando permissão de localização…';tracking.watch=navigator.geolocation.watchPosition(pos=>{if(!tracking)return;const p={lat:pos.coords.latitude,lon:pos.coords.longitude,accuracy:pos.coords.accuracy};if(p.accuracy>60){$('gpsStatus').textContent='Precisão baixa ('+Math.round(p.accuracy)+' m). Aguardando sinal melhor.';return}if(tracking.last){const d=gpsDistance(tracking.last,p),dt=(pos.timestamp-tracking.lastTimestamp)/1000;if(d>=3&&d<100&&dt>0&&d/dt<12)tracking.meters+=d}tracking.last=p;tracking.lastTimestamp=pos.timestamp;$('gpsStatus').textContent='GPS ativo · precisão aproximada '+Math.round(p.accuracy)+' metros';gpsUi()},err=>{$('gpsStatus').textContent='Erro de GPS: '+err.message;if(err.code===1){gpsStop(false);toast('Permissão de localização negada.')}},{enableHighAccuracy:true,maximumAge:0,timeout:15000});tracking.tick=setInterval(gpsUi,1000);gpsUi()}function gpsStop(keep){if(!tracking)return;const t=tracking;const seconds=Math.floor((Date.now()-t.started)/1000);navigator.geolocation.clearWatch(t.watch);clearInterval(t.tick);tracking=null;if(keep&&seconds>=5){data.activities.push({id:uid(),date:now(),type:t.type,seconds,km:t.meters/1000,cal:kcal(seconds,t.type)});save();toast('Atividade salva!')}else if(keep){toast('Atividade muito curta para registrar (mínimo 5 s).')}$('gpsStatus').textContent='Rastreamento finalizado.';gpsUi();renderActivities()}$('startGps').onclick=gpsStart;$('stopGps').onclick=()=>gpsStop(true);function renderActivities(){$('activityList').innerHTML=data.activities.length?data.activities.slice().reverse().map(x=>`<div class="item"><div><b>${esc(x.type)} · ${n(x.km,2)} km</b><small>${new Date(x.date).toLocaleString('pt-BR')} · ${secFormat(x.seconds)} · ~${n(x.cal)} kcal</small></div><button class="btn" data-delactivity="${esc(x.id)}">Excluir</button></div>`).join(''):'Nenhuma atividade registrada.'}$('activityList').onclick=e=>{let id=e.target.closest('[data-delactivity]')?.dataset.delactivity;if(id&&confirm('Excluir atividade?')){data.activities=data.activities.filter(x=>x.id!==id);save();render()}};
-$('measureDate').value=today();$('measureForm').onsubmit=e=>{e.preventDefault();let item={id:uid(),date:$('measureDate').value,weight:Number($('measureWeight').value),waist:$('measureWaist').value,arm:$('measureArm').value};data.measures.push(item);data.measures.sort((a,b)=>a.date.localeCompare(b.date));data.profile.weight=item.weight;save();render();toast('Medição registrada!')};function renderMeasures(){let ms=data.measures;$('measureList').innerHTML=ms.length?ms.slice().reverse().map(x=>`<div class="item"><div><strong>${esc(x.date)} · ${n(x.weight,1)} kg</strong><small>Cintura: ${x.waist?n(x.waist,1)+' cm':'—'} · Braço: ${x.arm?n(x.arm,1)+' cm':'—'}</small></div><button class="btn" data-delmeasure="${esc(x.id)}">Excluir</button></div>`).join(''):'Nenhuma medição registrada.';let last=ms.slice(-8),min=Math.min(...last.map(x=>x.weight),0),max=Math.max(...last.map(x=>x.weight),1);if(last.length){min=Math.min(...last.map(x=>x.weight))-2;max=Math.max(...last.map(x=>x.weight))+2}$('measureChart').innerHTML=last.length?last.map(x=>`<div class="bar" title="${esc(x.date)}: ${n(x.weight,1)} kg" style="height:${Math.max(12,((x.weight-min)/(max-min))*100)}%"><small>${esc(x.date.slice(5))}</small></div>`).join(''):'<span class="muted">O gráfico aparece ao registrar medidas.</span>'}$('measureList').onclick=e=>{let id=e.target.closest('[data-delmeasure]')?.dataset.delmeasure;if(id&&confirm('Excluir medição?')){data.measures=data.measures.filter(x=>x.id!==id);save();render()}};
+function renderWorkouts(){$('workoutCount').textContent=data.workouts.length+' treino(s)';$('workoutList').innerHTML=data.workouts.length?data.workouts.map(w=>`<div class="item"><div><strong>${esc(w.name)}</strong><small>${esc(w.type)} · ${esc(w.day)} · ${n(w.minutes)} min</small><div class="notice">${esc(w.exercises).replace(/\n/g,'<br>')}</div><div class="exercise-line-actions" data-exercise-buttons="${esc(w.id)}"></div></div><div class="row"><button class="btn" data-edit="${esc(w.id)}">Editar</button><button class="btn primary" data-done="${esc(w.id)}">Concluir</button><button class="btn" data-del="${esc(w.id)}">Excluir</button></div></div>`).join(''):'Nenhum treino cadastrado.';renderWorkoutExerciseButtons();$('workoutHistory').innerHTML=data.history.length?data.history.slice().reverse().slice(0,25).map(h=>`<div class="item"><div><b>${esc(h.name)}</b><small>${new Date(h.date).toLocaleString('pt-BR')} · ${esc(h.type)} · ${n(h.minutes)} min</small></div><button class="btn" data-delhistory="${esc(h.id)}">Excluir</button></div>`).join(''):'Sem treinos concluídos ainda.'}
+function clearWorkout(){$('workoutForm').reset();$('workoutId').value='';$('workoutEditor').classList.remove('opened');$('workoutFormTitle').textContent='Novo treino';document.querySelectorAll('[data-choose-workout]').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false')})}
+$('workoutClear').onclick=clearWorkout;
+$('workoutForm').onsubmit=e=>{e.preventDefault();const id=$('workoutId').value;const w={id:id||uid(),name:$('workoutName').value.trim(),type:$('workoutType').value,day:$('workoutDay').value,minutes:Number($('workoutMinutes').value),exercises:$('workoutExercises').value.trim()};if(!w.name||!w.exercises)return;const pos=data.workouts.findIndex(x=>x.id===id);pos>=0?data.workouts[pos]=w:data.workouts.push(w);save();clearWorkout();render();toast('Treino salvo!')};
+$('workoutList').onclick=e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.edit||b.dataset.done||b.dataset.del,w=data.workouts.find(x=>x.id===id);if(!w)return;if(b.dataset.edit){selectWorkoutType(workoutTemplates[w.type]?w.type:'Rua',true);$('workoutId').value=w.id;$('workoutName').value=w.name;$('workoutType').value=w.type;$('workoutDay').value=w.day;$('workoutMinutes').value=w.minutes;$('workoutExercises').value=w.exercises;$('workoutFormTitle').textContent='Editar treino';$('workoutName').focus()}else if(b.dataset.done){data.history.push({...w,id:uid(),date:now()});save();render();toast('Treino concluído!')}else if(confirm('Excluir este treino?')){data.workouts=data.workouts.filter(x=>x.id!==id);save();render()}};
+$('workoutHistory').onclick=e=>{let id=e.target.closest('[data-delhistory]')?.dataset.delhistory;if(id&&confirm('Apagar este histórico?')){data.history=data.history.filter(h=>h.id!==id);save();render()}};
 
-// Fit Music: links do YouTube + áudios locais.
-const musicCategories={pesado:'Treino pesado',cardio:'Corrida e cardio',foco:'Foco e concentração',personalizada:'Playlist personalizada'};
+const mealSets={comum:{ganhar:[['Café da manhã','Ovos, pão integral e fruta'],['Almoço','Arroz, feijão, frango e legumes'],['Lanche','Iogurte e banana com aveia'],['Jantar','Batata, peixe e salada']],perder:[['Café da manhã','Ovos e fruta'],['Almoço','Arroz, feijão, proteína magra e salada'],['Lanche','Fruta e iogurte natural'],['Jantar','Legumes, proteína e porção de carboidrato']],saude:[['Café da manhã','Fruta, aveia e iogurte'],['Almoço','Arroz, feijão, frango e salada'],['Lanche','Fruta e castanhas'],['Jantar','Omelete, legumes e batata']]},vegetariana:{ganhar:[['Café da manhã','Aveia, leite ou bebida vegetal e banana'],['Almoço','Arroz, feijão, tofu e legumes'],['Lanche','Iogurte ou alternativa vegetal e frutas'],['Jantar','Lentilha, quinoa e vegetais']],perder:[['Café da manhã','Frutas e aveia'],['Almoço','Grão-de-bico, arroz integral e salada'],['Lanche','Iogurte ou alternativa vegetal'],['Jantar','Tofu, verduras e legumes']],saude:[['Café da manhã','Fruta e aveia'],['Almoço','Arroz, feijão e vegetais'],['Lanche','Frutas e sementes'],['Jantar','Lentilha e legumes']]}};
+$('makeMeal').onclick=()=>{let pref=$('foodPreference').value,goal=data.profile.goal,group=goal==='ganhar'?'ganhar':goal==='perder'?'perder':'saude',notes=$('foodNotes').value.trim(),meals=mealSets[pref][group];$('mealResult').innerHTML=`<div class="tag" style="margin-bottom:12px">Objetivo: ${esc($('profileGoal').selectedOptions[0]?.textContent||goal)}</div>${meals.map(([a,b])=>`<div class="meal"><b>${esc(a)}</b>${esc(b)}</div>`).join('')}${notes?`<p class="notice">Observações: ${esc(notes)}</p>`:''}`};
+
+function gpsDistance(a,b){let R=6371e3,p1=a.lat*Math.PI/180,p2=b.lat*Math.PI/180,dp=(b.lat-a.lat)*Math.PI/180,dl=(b.lon-a.lon)*Math.PI/180,x=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+let tracking=null;
+function secFormat(sec){let h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h?h+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+function kcal(sec,type){let met=type==='Corrida'?8.3:3.5,kg=Number(data.profile.weight||70);return Math.round(met*3.5*kg/200*(sec/60))}
+function gpsUi(){let sec=tracking?Math.floor((Date.now()-tracking.started)/1000):0,km=tracking?.meters/1000||0;$('gpsKm').textContent=n(km,2);$('gpsTime').textContent=secFormat(sec);$('gpsCal').textContent=kcal(sec,$('trackType').value);$('startGps').disabled=!!tracking;$('stopGps').disabled=!tracking}
+function gpsStart(){if(!navigator.geolocation){toast('GPS indisponível neste navegador.');return}if(!window.isSecureContext){toast('Localização disponível apenas em ambiente seguro (HTTPS).');return}tracking={started:Date.now(),meters:0,last:null,watch:null,tick:null,type:$('trackType').value};$('gpsStatus').textContent='Solicitando permissão de localização…';tracking.watch=navigator.geolocation.watchPosition(pos=>{if(!tracking)return;const p={lat:pos.coords.latitude,lon:pos.coords.longitude,accuracy:pos.coords.accuracy};if(p.accuracy>60){$('gpsStatus').textContent='Precisão baixa ('+Math.round(p.accuracy)+' m). Aguardando sinal melhor.';return}if(tracking.last){const d=gpsDistance(tracking.last,p),dt=(pos.timestamp-tracking.lastTimestamp)/1000;if(d>=3&&d<100&&dt>0&&d/dt<12)tracking.meters+=d}tracking.last=p;tracking.lastTimestamp=pos.timestamp;$('gpsStatus').textContent='GPS ativo · precisão aproximada '+Math.round(p.accuracy)+' metros';gpsUi()},err=>{$('gpsStatus').textContent='Erro de GPS: '+err.message;if(err.code===1){gpsStop(false);toast('Permissão de localização negada.')}},{enableHighAccuracy:true,maximumAge:0,timeout:15000});tracking.tick=setInterval(gpsUi,1000);gpsUi()}
+function gpsStop(keep){if(!tracking)return;const t=tracking;const seconds=Math.floor((Date.now()-t.started)/1000);navigator.geolocation.clearWatch(t.watch);clearInterval(t.tick);tracking=null;if(keep&&seconds>=5){data.activities.push({id:uid(),date:now(),type:t.type,seconds,km:t.meters/1000,cal:kcal(seconds,t.type)});save();toast('Atividade salva!')}else if(keep){toast('Atividade muito curta para registrar (mínimo 5 s).')}$('gpsStatus').textContent='Rastreamento finalizado.';gpsUi();renderActivities()}
+$('startGps').onclick=gpsStart;$('stopGps').onclick=()=>gpsStop(true);
+function renderActivities(){$('activityList').innerHTML=data.activities.length?data.activities.slice().reverse().map(x=>`<div class="item"><div><b>${esc(x.type)} · ${n(x.km,2)} km</b><small>${new Date(x.date).toLocaleString('pt-BR')} · ${secFormat(x.seconds)} · ~${n(x.cal)} kcal</small></div><button class="btn" data-delactivity="${esc(x.id)}">Excluir</button></div>`).join(''):'Nenhuma atividade registrada.'}
+$('activityList').onclick=e=>{let id=e.target.closest('[data-delactivity]')?.dataset.delactivity;if(id&&confirm('Excluir atividade?')){data.activities=data.activities.filter(x=>x.id!==id);save();render()}};
+
+$('measureDate').value=today();
+$('measureForm').onsubmit=e=>{e.preventDefault();let item={id:uid(),date:$('measureDate').value,weight:Number($('measureWeight').value),waist:$('measureWaist').value,arm:$('measureArm').value};data.measures.push(item);data.measures.sort((a,b)=>a.date.localeCompare(b.date));data.profile.weight=item.weight;save();render();toast('Medição registrada!')};
+function renderMeasures(){let ms=data.measures;$('measureList').innerHTML=ms.length?ms.slice().reverse().map(x=>`<div class="item"><div><strong>${esc(x.date)} · ${n(x.weight,1)} kg</strong><small>Cintura: ${x.waist?n(x.waist,1)+' cm':'—'} · Braço: ${x.arm?n(x.arm,1)+' cm':'—'}</small></div><button class="btn" data-delmeasure="${esc(x.id)}">Excluir</button></div>`).join(''):'Nenhuma medição registrada.';let last=ms.slice(-8),min=Math.min(...last.map(x=>x.weight),0),max=Math.max(...last.map(x=>x.weight),1);if(last.length){min=Math.min(...last.map(x=>x.weight))-2;max=Math.max(...last.map(x=>x.weight))+2}$('measureChart').innerHTML=last.length?last.map(x=>`<div class="bar" title="${esc(x.date)}: ${n(x.weight,1)} kg" style="height:${Math.max(12,((x.weight-min)/(max-min))*100)}%"><small>${esc(x.date.slice(5))}</small></div>`).join(''):'<span class="muted">O gráfico aparece ao registrar medidas.</span>'}
+$('measureList').onclick=e=>{let id=e.target.closest('[data-delmeasure]')?.dataset.delmeasure;if(id&&confirm('Excluir medição?')){data.measures=data.measures.filter(x=>x.id!==id);save();render()}};
+
+// Fit Music: categorias personalizáveis + links do YouTube + áudios locais.
 let musicCategory='pesado',localTracks=[],activeMusicId=null,activeMusicType=null;
 let youtubePlayer=null,youtubeReady=false,youtubeRequest=0,youtubeTick=null,youtubeApiPromise=null;
+
+function ensureMusicCategories(){
+  if(!Array.isArray(data.musicCategories)||!data.musicCategories.length){
+    data.musicCategories=structuredClone(defaultMusicCategories);
+  }
+  data.musicCategories=data.musicCategories.filter(c=>c&&c.id&&c.name).map(c=>({
+    id:String(c.id),
+    name:String(c.name).trim(),
+    subtitle:String(c.subtitle||'').trim(),
+    icon:String(c.icon||'♫')
+  }));
+  if(!data.musicCategories.length)data.musicCategories=structuredClone(defaultMusicCategories);
+  if(!data.musicCategories.some(c=>c.id===musicCategory))musicCategory=data.musicCategories[0].id;
+}
+function getMusicCategory(id){
+  ensureMusicCategories();
+  return data.musicCategories.find(c=>c.id===id)||data.musicCategories[0];
+}
+function renderMusicCategories(){
+  ensureMusicCategories();
+  $('musicPresets').innerHTML=data.musicCategories.map(cat=>{
+    const on=cat.id===musicCategory;
+    return `<div class="music-preset${on?' selected':''}"><button type="button" class="music-preset-main" data-music-category="${esc(cat.id)}"><span class="music-symbol">${esc(cat.icon||'♫')}</span><span class="music-preset-text"><b>${esc(cat.name)}</b><small>${esc(cat.subtitle||'Playlist de treino')}</small></span><span class="music-indicator">${on?'◉':'▷'}</span></button><button type="button" class="music-preset-edit" data-edit-category="${esc(cat.id)}" title="Editar categoria" aria-label="Editar categoria ${esc(cat.name)}">✎</button></div>`;
+  }).join('');
+  const prevSelect=$('musicEditId').value?$('musicCategory').value:musicCategory;
+  $('musicCategory').innerHTML=data.musicCategories.map(cat=>`<option value="${esc(cat.id)}">${esc(cat.name)}</option>`).join('');
+  $('musicCategory').value=data.musicCategories.some(c=>c.id===prevSelect)?prevSelect:musicCategory;
+}
+function openCategoryForm(catId=null){
+  ensureMusicCategories();
+  const form=$('musicCatForm');
+  form.classList.remove('hidden');
+  if(catId){
+    const cat=data.musicCategories.find(c=>c.id===catId);
+    if(!cat)return;
+    $('catFormTitle').textContent='Editar categoria';
+    $('catEditId').value=cat.id;
+    $('catName').value=cat.name;
+    $('catSubtitle').value=cat.subtitle||'';
+    $('catIcon').value=Array.from($('catIcon').options).some(o=>o.value===cat.icon)?cat.icon:'♫';
+    $('catDeleteBtn').classList.toggle('hidden',data.musicCategories.length<=1);
+  }else{
+    form.reset();
+    $('catFormTitle').textContent='Nova categoria';
+    $('catEditId').value='';
+    $('catDeleteBtn').classList.add('hidden');
+  }
+  $('catName').focus();
+}
+function closeCategoryForm(){
+  $('musicCatForm').reset();
+  $('catEditId').value='';
+  $('musicCatForm').classList.add('hidden');
+  $('catDeleteBtn').classList.add('hidden');
+}
+$('newMusicCatBtn').addEventListener('click',()=>openCategoryForm());
+$('catFormCancel').addEventListener('click',closeCategoryForm);
+$('musicCatForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  ensureMusicCategories();
+  const id=$('catEditId').value;
+  const name=$('catName').value.trim();
+  const subtitle=$('catSubtitle').value.trim();
+  const icon=$('catIcon').value||'♫';
+  if(!name)return;
+  if(id){
+    const pos=data.musicCategories.findIndex(c=>c.id===id);
+    if(pos>=0)data.musicCategories[pos]={...data.musicCategories[pos],name,subtitle,icon};
+    save();
+    closeCategoryForm();
+    selectMusicCategory(id);
+    if(activeMusicId){
+      const playing=musicAll().find(t=>t.id===activeMusicId);
+      if(playing&&playing.category===id)$('musicNowSubtitle').textContent=name;
+    }
+    toast('Categoria atualizada!');
+  }else{
+    const newCat={id:'cat-'+uid(),name,subtitle,icon};
+    data.musicCategories.push(newCat);
+    save();
+    closeCategoryForm();
+    selectMusicCategory(newCat.id);
+    toast('Categoria criada!');
+  }
+});
+$('catDeleteBtn').addEventListener('click',()=>{
+  ensureMusicCategories();
+  const id=$('catEditId').value;
+  if(!id||data.musicCategories.length<=1)return;
+  if(!confirm('Excluir esta categoria? As músicas dela serão movidas para outra categoria.'))return;
+  const fallback=data.musicCategories.find(c=>c.id!==id);
+  data.music.forEach(t=>{if((t.category||'personalizada')===id)t.category=fallback.id});
+  localTracks.forEach(t=>{if(t.category===id)t.category=fallback.id});
+  data.musicCategories=data.musicCategories.filter(c=>c.id!==id);
+  if(musicCategory===id)musicCategory=fallback.id;
+  save();
+  closeCategoryForm();
+  selectMusicCategory(musicCategory);
+  toast('Categoria excluída.');
+});
 
 function loadYouTubeApi(){
   if(window.YT&&window.YT.Player)return Promise.resolve();
@@ -129,19 +277,35 @@ async function playYoutubeTrack(track){
 }
 
 const musicAudio=$('musicAudio');musicAudio.volume=.8;
-function musicAll(){return [...data.music.map(t=>({...t,kind:t.service||'youtube',category:t.category||'personalizada'})),...localTracks]}
+function musicAll(){
+  ensureMusicCategories();
+  const validIds=new Set(data.musicCategories.map(c=>c.id));
+  const fallbackId=data.musicCategories[0].id;
+  return [
+    ...data.music.map(t=>({...t,kind:t.service||'youtube',category:validIds.has(t.category)?t.category:fallbackId})),
+    ...localTracks.map(t=>({...t,category:validIds.has(t.category)?t.category:fallbackId}))
+  ];
+}
 function musicQueue(){return musicAll().filter(t=>t.category===musicCategory)}
 function musicStatus(message){$('musicStatus').textContent=message}
 function musicTime(secs){if(!Number.isFinite(secs))return '0:00';const t=Math.max(0,Math.floor(secs));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function stopCurrentMusic(){++youtubeRequest;stopYoutube();musicAudio.pause();musicAudio.removeAttribute('src');musicAudio.load();activeMusicId=null;activeMusicType=null;$('musicToggle').textContent='▶';$('musicNowTitle').textContent='Nenhuma música selecionada';$('musicNowSubtitle').textContent=musicCategories[musicCategory];$('musicPlayerMode').textContent='YouTube';$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicSeek').value=0}
-function selectMusicCategory(category){if(!musicCategories[category])return;musicCategory=category;$('musicCategory').value=category;document.querySelectorAll('[data-music-category]').forEach(b=>{let on=b.dataset.musicCategory===category;b.classList.toggle('selected',on);b.querySelector('.music-indicator').textContent=on?'◉':'▷'});renderMusic();if(!musicQueue().length)musicStatus('Adicione um link do YouTube para '+musicCategories[category].toLowerCase()+'.');else musicStatus(musicQueue().length+' item(ns) nesta trilha.')}
+function stopCurrentMusic(){++youtubeRequest;stopYoutube();musicAudio.pause();musicAudio.removeAttribute('src');musicAudio.load();activeMusicId=null;activeMusicType=null;$('musicToggle').textContent='▶';$('musicNowTitle').textContent='Nenhuma música selecionada';$('musicNowSubtitle').textContent=getMusicCategory(musicCategory).name;$('musicPlayerMode').textContent='YouTube';$('musicCurrentTime').textContent='0:00';$('musicTotalTime').textContent='0:00';$('musicSeek').value=0}
+function selectMusicCategory(category){
+  ensureMusicCategories();
+  const cat=getMusicCategory(category);
+  musicCategory=cat.id;
+  renderMusicCategories();
+  renderMusic();
+  if(!musicQueue().length)musicStatus('Adicione um link do YouTube para '+cat.name.toLowerCase()+'.');
+  else musicStatus(musicQueue().length+' item(ns) em '+cat.name+'.');
+}
 function playMusicItem(id){
   const t=musicAll().find(item=>item.id===id);
   if(!t){musicStatus('Música não encontrada.');return}
   if(t.kind!=='local'&&!validatedMusicUrl(t.url)){musicStatus('Link inválido. Adicione um link do YouTube.');return}
   musicCategory=t.category;selectMusicCategory(musicCategory);stopCurrentMusic();
   activeMusicId=t.id;activeMusicType=t.kind==='local'?'local':'youtube';
-  $('musicNowTitle').textContent=t.name;$('musicNowSubtitle').textContent=musicCategories[t.category];
+  $('musicNowTitle').textContent=t.name;$('musicNowSubtitle').textContent=getMusicCategory(t.category).name;
   $('musicPlayerMode').textContent=activeMusicType==='local'?'Áudio local':'YouTube';
   if(activeMusicType==='local'){
     musicAudio.src=t.url;
@@ -153,13 +317,97 @@ function playMusicItem(id){
   renderMusic();
 }
 function nextMusic(delta){let q=musicQueue();if(!q.length){musicStatus('Esta categoria não tem músicas.');return}let i=q.findIndex(x=>x.id===activeMusicId);let next=q[(i+delta+q.length)%q.length];playMusicItem(next.id)}
-function renderMusic(){let queue=musicQueue();$('musicCount').textContent=queue.length;$('musicList').innerHTML=queue.length?queue.map(t=>`<div class="item"><div class="track-heading"><b>${esc(t.name)}</b><small>${t.kind==='local'?'♫ Áudio local':'▶ YouTube'}</small></div><button type="button" class="btn primary" data-play="${esc(t.id)}" aria-label="Reproduzir ${esc(t.name)}">${t.kind!=='local'?'▶ Ouvir':'▶'}</button><button type="button" class="btn" data-delmusic="${esc(t.id)}" aria-label="Excluir ${esc(t.name)}">✕</button></div>`).join(''):'<p class="notice">Sua trilha está vazia. Cole um link do YouTube acima.</p>'}
+function renderMusic(){
+  renderMusicCategories();
+  let queue=musicQueue();
+  $('musicCount').textContent=queue.length;
+  $('musicList').innerHTML=queue.length?queue.map(t=>`<div class="item"><div class="track-heading"><b>${esc(t.name)}</b><small>${t.kind==='local'?'♫ Áudio local':'▶ YouTube'}</small></div><button type="button" class="btn primary" data-play="${esc(t.id)}" aria-label="Reproduzir ${esc(t.name)}">${t.kind!=='local'?'▶ Ouvir':'▶'}</button><button type="button" class="btn" data-editmusic="${esc(t.id)}" title="Editar música ou categoria" aria-label="Editar ${esc(t.name)}">✎</button><button type="button" class="btn" data-delmusic="${esc(t.id)}" aria-label="Excluir ${esc(t.name)}">✕</button></div>`).join(''):'<p class="notice">Sua trilha está vazia. Cole um link do YouTube acima.</p>';
+}
+function editMusicItem(id){
+  const t=musicAll().find(x=>x.id===id);if(!t)return;
+  $('musicEditId').value=t.id;
+  $('musicCategory').value=t.category;
+  $('musicName').value=t.name;
+  if(t.kind==='local'){
+    $('musicLinkLabel').classList.add('hidden');
+    $('musicUrl').required=false;
+    $('musicUrl').value='';
+  }else{
+    $('musicLinkLabel').classList.remove('hidden');
+    $('musicUrl').required=true;
+    $('musicUrl').value=t.url;
+  }
+  $('musicFormTitle').textContent='Editar música ou categoria';
+  $('musicSubmitBtn').textContent='Salvar alterações';
+  $('musicCancelEdit').classList.remove('hidden');
+  $('musicForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+  $('musicName').focus();
+}
+function cancelMusicEdit(){
+  $('musicForm').reset();
+  $('musicEditId').value='';
+  $('musicLinkLabel').classList.remove('hidden');
+  $('musicUrl').required=true;
+  $('musicFormTitle').textContent='Adicionar música do YouTube';
+  $('musicSubmitBtn').textContent='＋ Salvar link do YouTube';
+  $('musicCancelEdit').classList.add('hidden');
+  $('musicCategory').value=musicCategory;
+}
 
-$('musicPresets').addEventListener('click',e=>{let b=e.target.closest('[data-music-category]');if(b)selectMusicCategory(b.dataset.musicCategory)});
-$('musicCategory').addEventListener('change',e=>selectMusicCategory(e.target.value));
+$('musicPresets').addEventListener('click',e=>{
+  const editBtn=e.target.closest('[data-edit-category]');
+  if(editBtn){openCategoryForm(editBtn.dataset.editCategory);return}
+  const catBtn=e.target.closest('[data-music-category]');
+  if(catBtn)selectMusicCategory(catBtn.dataset.musicCategory);
+});
+$('musicCategory').addEventListener('change',e=>{
+  if(!$('musicEditId').value)selectMusicCategory(e.target.value);
+});
+$('musicCancelEdit').addEventListener('click',cancelMusicEdit);
 $('musicFiles').addEventListener('change',e=>{let files=Array.from(e.target.files||[]),added=0;for(let f of files){if(!(f.type.startsWith('audio/')||/\.(mp3|m4a|ogg|wav|flac)$/i.test(f.name))){continue}localTracks.push({id:uid(),name:f.name.replace(/\.[^.]+$/,''),category:musicCategory,kind:'local',url:URL.createObjectURL(f)});added++}e.target.value='';renderMusic();musicStatus(added?added+' arquivo(s) adicionado(s).':'Nenhum áudio compatível selecionado.');});
-$('musicForm').onsubmit=e=>{e.preventDefault();const url=$('musicUrl').value.trim();if(!validatedMusicUrl(url)){toast('Informe um link válido do YouTube.');return}let track={id:uid(),name:$('musicName').value.trim(),url,category:musicCategory,service:'youtube'};data.music.push(track);save();$('musicForm').reset();renderMusic();toast('Link salvo! Clique em ▶ Ouvir para tocar.')};
-$('musicList').addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.play){playMusicItem(b.dataset.play);return}if(b.dataset.delmusic){let id=b.dataset.delmusic;if(!confirm('Excluir esta música da lista?'))return;if(activeMusicId===id)stopCurrentMusic();let local=localTracks.find(x=>x.id===id);if(local){URL.revokeObjectURL(local.url);localTracks=localTracks.filter(x=>x.id!==id)}else{data.music=data.music.filter(x=>x.id!==id);save()}renderMusic();toast('Música removida.')}});
+$('musicForm').onsubmit=e=>{
+  e.preventDefault();
+  const editId=$('musicEditId').value;
+  const chosenCat=$('musicCategory').value||musicCategory;
+  const name=$('musicName').value.trim();
+  const url=$('musicUrl').value.trim();
+  if(!name)return;
+  if(editId){
+    const localIdx=localTracks.findIndex(x=>x.id===editId);
+    if(localIdx>=0){
+      localTracks[localIdx]={...localTracks[localIdx],name,category:chosenCat};
+    }else{
+      if(!validatedMusicUrl(url)){toast('Informe um link válido do YouTube.');return}
+      const idx=data.music.findIndex(x=>x.id===editId);
+      if(idx>=0){data.music[idx]={...data.music[idx],name,url,category:chosenCat,service:'youtube'};save();}
+    }
+    if(activeMusicId===editId){
+      $('musicNowTitle').textContent=name;
+      $('musicNowSubtitle').textContent=getMusicCategory(chosenCat).name;
+    }
+    cancelMusicEdit();
+    selectMusicCategory(chosenCat);
+    toast('Música atualizada!');
+    return;
+  }
+  if(!validatedMusicUrl(url)){toast('Informe um link válido do YouTube.');return}
+  let track={id:uid(),name,url,category:chosenCat,service:'youtube'};
+  data.music.push(track);save();$('musicForm').reset();selectMusicCategory(chosenCat);toast('Link salvo! Clique em ▶ Ouvir para tocar.');
+};
+$('musicList').addEventListener('click',e=>{
+  let b=e.target.closest('button');if(!b)return;
+  if(b.dataset.play){playMusicItem(b.dataset.play);return}
+  if(b.dataset.editmusic){editMusicItem(b.dataset.editmusic);return}
+  if(b.dataset.delmusic){
+    let id=b.dataset.delmusic;if(!confirm('Excluir esta música da lista?'))return;
+    if(activeMusicId===id)stopCurrentMusic();
+    if($('musicEditId').value===id)cancelMusicEdit();
+    let local=localTracks.find(x=>x.id===id);
+    if(local){URL.revokeObjectURL(local.url);localTracks=localTracks.filter(x=>x.id!==id)}
+    else{data.music=data.music.filter(x=>x.id!==id);save()}
+    renderMusic();toast('Música removida.');
+  }
+});
 $('musicToggle').addEventListener('click',()=>{
   if(activeMusicType==='youtube'){
     if(!youtubeReady||!youtubePlayer){musicStatus('Carregando player…');return}
@@ -181,7 +429,15 @@ musicAudio.addEventListener('ended',()=>{if(musicQueue().length>1)nextMusic(1);e
 musicAudio.addEventListener('error',()=>{if(activeMusicType==='local')musicStatus('Formato de áudio não suportado ou arquivo indisponível.');});
 selectMusicCategory('pesado');
 
-function syncProfile(){let p={...initial.profile,...data.profile};for(let k of ['name','age','gender','height','weight','goal','body','water','reminder'])$('profile'+k[0].toUpperCase()+k.slice(1)).value=p[k]??''}$('profileForm').onsubmit=e=>{e.preventDefault();for(let k of ['name','age','gender','height','weight','goal','body','water','reminder'])data.profile[k]=$('profile'+k[0].toUpperCase()+k.slice(1)).value;save();render();toast('Perfil atualizado.')};let reminderTimer=null;async function setNotification(){if(!('Notification' in window)){toast('Notificações indisponíveis neste navegador.');return}const permission=await Notification.requestPermission();data.settings.notify=permission==='granted';save();applyReminders();toast(data.settings.notify?'Notificações de água ativadas.':'Permissão de notificações não concedida.')}function applyReminders(){clearInterval(reminderTimer);$('notifyBtn').textContent=data.settings.notify?'🔔 Avisos: ON':'🔔 Avisos';$('notifyBtn').classList.toggle('selected',!!data.settings.notify);if(data.settings.notify&&'Notification' in window&&Notification.permission==='granted'){const min=Math.max(10,Number(data.profile.reminder)||60);reminderTimer=setInterval(()=>{if(document.visibilityState==='visible')new Notification('Fitness Orbit',{body:'Hora de conferir sua hidratação! 💧'})},min*60000)}}$('notifyBtn').onclick=()=>{if(data.settings.notify){data.settings.notify=false;save();applyReminders();toast('Notificações de água desativadas.')}else setNotification()};$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='fitness-orbit-backup-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.workouts)||!Array.isArray(parsed.history)||!Array.isArray(parsed.activities)||!Array.isArray(parsed.measures)||!Array.isArray(parsed.music)||!parsed.profile||!parsed.settings||!parsed.water)throw Error('Formato não reconhecido');if(confirm('Substituir todos os dados atuais pelos dados do backup?')){data=parsed;save();theme();syncProfile();render();toast('Backup importado!')}}catch{toast('Arquivo de backup inválido.')}e.target.value=''};function render(){renderHome();renderWorkouts();renderActivities();renderMeasures();renderMusic();syncProfile();applyReminders()}
+function syncProfile(){let p={...initial.profile,...data.profile};for(let k of ['name','age','gender','height','weight','goal','body','water','reminder'])$('profile'+k[0].toUpperCase()+k.slice(1)).value=p[k]??''}
+$('profileForm').onsubmit=e=>{e.preventDefault();for(let k of ['name','age','gender','height','weight','goal','body','water','reminder'])data.profile[k]=$('profile'+k[0].toUpperCase()+k.slice(1)).value;save();render();toast('Perfil atualizado.')};
+let reminderTimer=null;
+async function setNotification(){if(!('Notification' in window)){toast('Notificações indisponíveis neste navegador.');return}const permission=await Notification.requestPermission();data.settings.notify=permission==='granted';save();applyReminders();toast(data.settings.notify?'Notificações de água ativadas.':'Permissão de notificações não concedida.')}
+function applyReminders(){clearInterval(reminderTimer);$('notifyBtn').textContent=data.settings.notify?'🔔 Avisos: ON':'🔔 Avisos';$('notifyBtn').classList.toggle('selected',!!data.settings.notify);if(data.settings.notify&&'Notification' in window&&Notification.permission==='granted'){const min=Math.max(10,Number(data.profile.reminder)||60);reminderTimer=setInterval(()=>{if(document.visibilityState==='visible')new Notification('Fitness Orbit',{body:'Hora de conferir sua hidratação! 💧'})},min*60000)}}
+$('notifyBtn').onclick=()=>{if(data.settings.notify){data.settings.notify=false;save();applyReminders();toast('Notificações de água desativadas.')}else setNotification()};
+$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='fitness-orbit-backup-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.workouts)||!Array.isArray(parsed.history)||!Array.isArray(parsed.activities)||!Array.isArray(parsed.measures)||!Array.isArray(parsed.music)||!parsed.profile||!parsed.settings||!parsed.water)throw Error('Formato não reconhecido');if(confirm('Substituir todos os dados atuais pelos dados do backup?')){data={...structuredClone(initial),...parsed};ensureMusicCategories();save();theme();syncProfile();render();toast('Backup importado!')}}catch{toast('Arquivo de backup inválido.')}e.target.value=''};
+function render(){renderHome();renderWorkouts();renderActivities();renderMeasures();renderMusic();syncProfile();applyReminders()}
 
 const exerciseLibrary=[
  {id:'agachamento',name:'Agachamento livre',types:['Academia','Casa','Calistenia'],motion:'squat',primary:['quadriceps','gluteos'],secondary:['posterior','core'],steps:['Afaste os pés aproximadamente na largura dos ombros.','Flexione quadril e joelhos mantendo o tronco estável.','Empurre o chão e retorne sem perder o alinhamento.'],errors:['Joelhos colapsando para dentro','Perder controle da lombar'],dose:'3 × 10–12'},
